@@ -1,8 +1,11 @@
 #include <iostream>
 #include <random>
+#include <cmath>
 #include <fstream>
 #include <vector>
+#include <Eigen/Dense>
 
+using namespace Eigen;
 using namespace std;
 //
 struct BasicData
