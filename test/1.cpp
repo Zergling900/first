@@ -3,6 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
+#include <iomanip>
 #include <Eigen/Dense>
 
 using namespace Eigen;
@@ -11,18 +12,18 @@ using namespace std;
 // ----------------------------
 struct BasicData
 {
-    int n;          // number of atoms
-    double T;       // unknown
-    double E;       // energy
-    double Box_L;   // box size
-    double a0;      // 
-    double theta;   // 
-    double phi;     // 
+    int n;        // number of atoms
+    double T;     // unknown
+    double E;     // energy
+    double Box_L; // box size
+    double a0;    //
+    double theta; //
+    double phi;   //
 };
 
 struct FirstMolecularData
 {
-    double x0, y0, z0; 
+    double x0, y0, z0;
 };
 
 // BCCData
@@ -33,6 +34,17 @@ struct BCCData
     double xdv1, ydv1, zdv1;
 };
 std::vector<BCCData> BCC;
+//-----------------------------------------------
+// struct AtomicData
+// {
+//     double x1, y1, z1;
+//     double xv1, yv1, zv1;
+//     double xdv1, ydv1, zdv1;
+// };
+//std::vector<AtomicData> BCC;
+// std::vector<AtomicData> FCC;
+// std::vector<AtomicData> Diamond;
+// -----------------------------------------------
 
 // FCCData
 struct FCCData
@@ -65,9 +77,8 @@ void read(BasicData &data)
     // angle to radian
     const double deg2rad = M_PI / 180.0;
     data.theta *= deg2rad;
-    data.phi   *= deg2rad;
+    data.phi *= deg2rad;
 }
-
 
 // ----------------------------
 // random (first molecular)
@@ -80,10 +91,10 @@ void random(FirstMolecularData &MolecularData, double a0)
     MolecularData.z0 = distr(global_eng);
 }
 
-
 // ----------------------------
-// R(theta, phi)
-Matrix3d make_rotation(double theta, double phi)
+
+// Rotation matrix (theta, phi)
+Matrix3d Rotation(double theta, double phi)
 {
     double ct = std::cos(theta);
     double st = std::sin(theta);
@@ -91,58 +102,72 @@ Matrix3d make_rotation(double theta, double phi)
     double sp = std::sin(phi);
 
     Matrix3d Rz;
-    Rz <<  cp, -sp, 0,
-           sp,  cp, 0,
-           0 ,   0 , 1;
+    Rz << cp, -sp, 0,
+        sp, cp, 0,
+        0, 0, 1;
 
     Matrix3d Ry;
-    Ry <<  ct, 0, st,
-           0 , 1, 0,
-          -st, 0, ct;
+    Ry << ct, 0, st,
+        0, 1, 0,
+        -st, 0, ct;
 
     Matrix3d R = Ry * Rz;
     return R;
 }
 
-
-// ----------------------------
-// 用一个晶格方向向量 v (比如 A_rot.col(0))
-// 来估计“往该方向走一格, 在任意坐标轴上
-// 会膨胀出去多少”。
-// 我们用它来估算循环上限 nx,ny,nz
-// ----------------------------
-double span_per_step(const Vector3d &v)
+// basic matrix A
+Matrix3d A0(const BasicData &data)
 {
-    double sx = std::abs(v(0));
-    double sy = std::abs(v(1));
-    double sz = std::abs(v(2));
-    return std::max({sx, sy, sz});
+    Matrix3d A;
+    A << data.a0, 0, 0,
+        0, data.a0, 0,
+        0, 0, data.a0;
+    return A;
 }
 
+// ----------------------------
+
+double Step(const Vector3d &a)
+{
+    double ax = std::abs(a(0));
+    double ay = std::abs(a(1));
+    double az = std::abs(a(2));
+    return std::max({ax, ay, az});
+}
 
 // ----------------------------
-// 根据 A_rot 和 Box_L 来估计 nx,ny,nz 的上限
-// 我们多加一点余量 (+2) ，然后在生成时再用 if 筛选
+/*
+a0 = a0 0 0
+     0  a0 0
+     0  0  a0
+
+A_rot = R * A = Ry * Rz *A
+      =  ct, 0, st,        cp, -sp, 0         a0, 0, 0
+         0 , 1, 0,    X    sp,  cp, 0    X    0, a0, 0
+        -st, 0, ct;        0 ,  0,  1.        0, 0, a0
+*/
 // ----------------------------
-void estimate_cells(const Matrix3d &A_rot,
-                    double Box_L,
-                    int &nx_est, int &ny_est, int &nz_est)
+void Box(const Matrix3d &A_rot, const BasicData &data, int &nx_est, int &ny_est, int &nz_est)
 {
+    // col(0) = (a0x, a0y, a0z)
     Vector3d a1 = A_rot.col(0);
     Vector3d a2 = A_rot.col(1);
     Vector3d a3 = A_rot.col(2);
 
-    double dx = span_per_step(a1);
-    double dy = span_per_step(a2);
-    double dz = span_per_step(a3);
+    double dx = Step(a1);
+    double dy = Step(a2);
+    double dz = Step(a3);
 
-    if (dx < 1e-12) dx = 1e-12;
-    if (dy < 1e-12) dy = 1e-12;
-    if (dz < 1e-12) dz = 1e-12;
+    if (dx < 1e-14)
+        dx = 1e-14;
+    if (dy < 1e-14)
+        dy = 1e-14;
+    if (dz < 1e-14)
+        dz = 1e-14;
 
-    nx_est = static_cast<int>( std::ceil(Box_L / dx) ) + 2;
-    ny_est = static_cast<int>( std::ceil(Box_L / dy) ) + 2;
-    nz_est = static_cast<int>( std::ceil(Box_L / dz) ) + 2;
+    nx_est = static_cast<int>(std::ceil(data.Box_L / dx)) + 2;
+    ny_est = static_cast<int>(std::ceil(data.Box_L / dy)) + 2;
+    nz_est = static_cast<int>(std::ceil(data.Box_L / dz)) + 2;
 }
 
 // calculation method
@@ -152,59 +177,50 @@ void estimate_cells(const Matrix3d &A_rot,
 //   4. r = A_rot * ( (ix,iy,iz) + basis[b] ) + r0
 //   5. if(in Box_L) -> push_back
 
-
 // ------------------------------------------------------------
-// bcc
-// 2
-// (0,0,0) 
-//(1/2,1/2,1/2)
-// ------------------------------------------------------------
-void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data_dummy)
+void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data)
 {
-    // 随机起点 r0
+    // random first atom position r0
     Vector3d r0(MolecularData.x0, MolecularData.y0, MolecularData.z0);
 
-    // 晶格矩阵(立方, 未旋转)
-    Matrix3d A;
-    A << data.a0, 0,        0,
-         0,       data.a0,  0,
-         0,       0,        data.a0;
-
-    // 旋转矩阵
-    Matrix3d Rmat = make_rotation(data.theta, data.phi);
-
-    // 旋转后的晶格矩阵
-    Matrix3d A_rot = Rmat * A;
-
-    // BCC 基底 (两个点)
-    struct BCCBasis { double fx, fy, fz; };
+    // rotation matrix
+    Matrix3d R = Rotation(data.theta, data.phi);
+    Matrix3d A = A0(data);
+    Matrix3d A_rot = R * A;
+    // BCC basis
+    // 2
+    // (0,0,0)
+    //(1/2,1/2,1/2)
+    struct BCCBasis
+    {
+        double fx, fy, fz;
+    };
     BCCBasis basis[2] = {
         {0.0, 0.0, 0.0},
-        {0.5, 0.5, 0.5}
-    };
+        {0.5, 0.5, 0.5}};
 
-    // 粗略估计我们需要的循环上限
+    // Box calculation
     int nx_est, ny_est, nz_est;
-    estimate_cells(A_rot, data.Box_L, nx_est, ny_est, nz_est);
+    Box(A_rot, data, nx_est, ny_est, nz_est);
 
-    // 清空全局 BCC，并预留空间
+    // one bcc cell has 2 atoms
     BCC.clear();
     BCC.reserve(nx_est * ny_est * nz_est * 2);
 
-    // 三重循环生成
+    // --------------------------------------------
     for (int ix = 0; ix < nx_est; ++ix)
     {
         for (int iy = 0; iy < ny_est; ++iy)
         {
             for (int iz = 0; iz < nz_est; ++iz)
             {
-                Vector3d n_cell(ix, iy, iz);
+                Vector3d i(ix, iy, iz);
 
-                for (int b = 0; b < 2; ++b)
+                for (int b = 0; b < 2; ++b) // bcc 2 basis atoms
                 {
-                    Vector3d frac(n_cell(0) + basis[b].fx,
-                                  n_cell(1) + basis[b].fy,
-                                  n_cell(2) + basis[b].fz);
+                    Vector3d frac(i(0) + basis[b].fx, // fractional coordinates
+                                  i(1) + basis[b].fy,
+                                  i(2) + basis[b].fz);
 
                     Vector3d r_cart = A_rot * frac + r0;
 
@@ -212,52 +228,77 @@ void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data_dummy
                     double y = r_cart(1);
                     double z = r_cart(2);
 
-                    // 裁剪到盒子里
+                    // in box
                     if (x >= 0.0 && y >= 0.0 && z >= 0.0 &&
                         x < data.Box_L &&
                         y < data.Box_L &&
                         z < data.Box_L)
                     {
-                        BCCData atom;
-                        atom.x1 = x;
-                        atom.y1 = y;
-                        atom.z1 = z;
+                        BCCData bcc;
+                        bcc.x1 = x;
+                        bcc.y1 = y;
+                        bcc.z1 = z;
 
-                        atom.xv1 = 0.0;
-                        atom.yv1 = 0.0;
-                        atom.zv1 = 0.0;
+                        // bcc.xv1 = bcc.xdv1;
+                        // bcc.yv1 = bcc.ydv1;
+                        // bcc.zv1 = bcc.zdv1;
+                        bcc.xv1 = 0.0;
+                        bcc.yv1 = 0.0;
+                        bcc.zv1 = 0.0;
 
-                        atom.xdv1 = 0.0;
-                        atom.ydv1 = 0.0;
-                        atom.zdv1 = 0.0;
+                        bcc.xdv1 = 0.0;
+                        bcc.ydv1 = 0.0;
+                        bcc.zdv1 = 0.0;
 
-                        BCC.push_back(atom);
+                        BCC.push_back(bcc);
                     }
                 }
             }
         }
     }
 
-    // 最终原子数写回 data.n (或者你想放别处也行)
     data.n = static_cast<int>(BCC.size());
-
-    /*  // 输出到文件的例子 (整段保留注释块)
-    {
-        std::ofstream fout("bcc_out.xyz");
-        fout << BCC.size() << "\n";
-        fout << "BCC structure\n";
-        for (size_t i = 0; i < BCC.size(); ++i)
-        {
-            fout << "W "
-                 << BCC[i].x1 << " "
-                 << BCC[i].y1 << " "
-                 << BCC[i].z1 << "\n";
-        }
-    }
-    */
 }
+void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
+                const std::string &filename = "bcc.md")
+{
+    std::ofstream fout(filename);
+    fout << data.n << "\n";
+    fout << "time = " << data.T
+         << "(fs) Energy = " << data.E
+         << "(eV)" << "\n";
 
+    fout << "BOX"
+         << std::fixed << std::setprecision(8)
+         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << 0.0        // ay
+         << std::setw(14) << 0.0        // az
+         << std::setw(14) << 0.0        // bx
+         << std::setw(14) << data.Box_L // by
+         << std::setw(14) << 0.0        // bz
+         << std::setw(14) << 0.0        // cx
+         << std::setw(14) << 0.0        // cy
+         << std::setw(14) << data.Box_L // cz
+         << "\n";
 
+    for (size_t i = 0; i < data.n; ++i)
+    {
+        fout << std::setw(4) << "W"
+             << std::fixed << std::setprecision(8)
+             << std::setw(14) << BCC[i].x1
+             << std::setw(14) << BCC[i].y1
+             << std::setw(14) << BCC[i].z1
+             << std::setw(14) << BCC[i].xv1
+             << std::setw(14) << BCC[i].yv1
+             << std::setw(14) << BCC[i].zv1
+             << std::setw(14) << BCC[i].xdv1
+             << std::setw(14) << BCC[i].ydv1
+             << std::setw(14) << BCC[i].zdv1
+             << "\n";
+    }
+
+    fout.close();
+}
 // ------------------------------------------------------------
 // fcc
 // 4
@@ -266,45 +307,53 @@ void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data_dummy
 // (1/2,0,1/2)
 // (0,1/2,1/2)
 // ------------------------------------------------------------
-void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data_dummy)
+void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data)
 {
+    // random first atom position r0
     Vector3d r0(MolecularData.x0, MolecularData.y0, MolecularData.z0);
 
-    Matrix3d A;
-    A << data.a0, 0,        0,
-         0,       data.a0,  0,
-         0,       0,        data.a0;
-
-    Matrix3d Rmat = make_rotation(data.theta, data.phi);
-    Matrix3d A_rot = Rmat * A;
-
-    struct FCCBasis { double fx, fy, fz; };
+    // rotation matrix
+    Matrix3d R = Rotation(data.theta, data.phi);
+    Matrix3d A = A0(data);
+    Matrix3d A_rot = R * A;
+    // FCC basis
+    // 4
+    // (0,0,0)
+    // (1/2,1/2,0)
+    // (1/2,0,1/2)
+    // (0,1/2,1/2)
+    struct FCCBasis
+    {
+        double fx, fy, fz;
+    };
     FCCBasis basis[4] = {
         {0.0, 0.0, 0.0},
         {0.5, 0.5, 0.0},
         {0.5, 0.0, 0.5},
-        {0.0, 0.5, 0.5}
-    };
+        {0.0, 0.5, 0.5}};
 
+    // Box calculation
     int nx_est, ny_est, nz_est;
-    estimate_cells(A_rot, data.Box_L, nx_est, ny_est, nz_est);
+    Box(A_rot, data, nx_est, ny_est, nz_est);
 
+    // one fcc cell has 4 atoms
     FCC.clear();
     FCC.reserve(nx_est * ny_est * nz_est * 4);
 
+    // --------------------------------------------
     for (int ix = 0; ix < nx_est; ++ix)
     {
         for (int iy = 0; iy < ny_est; ++iy)
         {
             for (int iz = 0; iz < nz_est; ++iz)
             {
-                Vector3d n_cell(ix, iy, iz);
+                Vector3d i(ix, iy, iz);
 
-                for (int b = 0; b < 4; ++b)
+                for (int b = 0; b < 4; ++b) // fcc 4 basis atoms
                 {
-                    Vector3d frac(n_cell(0) + basis[b].fx,
-                                  n_cell(1) + basis[b].fy,
-                                  n_cell(2) + basis[b].fz);
+                    Vector3d frac(i(0) + basis[b].fx, // fractional coordinates
+                                  i(1) + basis[b].fy,
+                                  i(2) + basis[b].fz);
 
                     Vector3d r_cart = A_rot * frac + r0;
 
@@ -312,25 +361,29 @@ void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data_dummy
                     double y = r_cart(1);
                     double z = r_cart(2);
 
+                    // in box
                     if (x >= 0.0 && y >= 0.0 && z >= 0.0 &&
                         x < data.Box_L &&
                         y < data.Box_L &&
                         z < data.Box_L)
                     {
-                        FCCData atom;
-                        atom.x2 = x;
-                        atom.y2 = y;
-                        atom.z2 = z;
+                        FCCData fcc;
+                        fcc.x2 = x;
+                        fcc.y2 = y;
+                        fcc.z2 = z;
 
-                        atom.xv2 = 0.0;
-                        atom.yv2 = 0.0;
-                        atom.zv2 = 0.0;
+                        // fcc.xv2 = fcc.xdv2;
+                        // fcc.yv2 = fcc.ydv2;
+                        // fcc.zv2 = fcc.zdv2;
+                        fcc.xv2 = 0.0;
+                        fcc.yv2 = 0.0;
+                        fcc.zv2 = 0.0;
 
-                        atom.xdv2 = 0.0;
-                        atom.ydv2 = 0.0;
-                        atom.zdv2 = 0.0;
+                        fcc.xdv2 = 0.0;
+                        fcc.ydv2 = 0.0;
+                        fcc.zdv2 = 0.0;
 
-                        FCC.push_back(atom);
+                        FCC.push_back(fcc);
                     }
                 }
             }
@@ -338,79 +391,115 @@ void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data_dummy
     }
 
     data.n = static_cast<int>(FCC.size());
-
-    /*  // 输出到文件的例子
-    {
-        std::ofstream fout("fcc_out.xyz");
-        fout << FCC.size() << "\n";
-        fout << "FCC structure\n";
-        for (size_t i = 0; i < FCC.size(); ++i)
-        {
-            fout << "W "
-                 << FCC[i].x2 << " "
-                 << FCC[i].y2 << " "
-                 << FCC[i].z2 << "\n";
-        }
-    }
-    */
 }
+void output_fcc(const BasicData &data, const std::vector<FCCData> &FCC,
+                const std::string &filename = "fcc.md")
+{
+    std::ofstream fout(filename);
+    fout << data.n << "\n";
+    fout << "time = " << data.T
+         << "(fs) Energy = " << data.E
+         << "(eV)" << "\n";
 
+    fout << "BOX"
+         << std::fixed << std::setprecision(8)
+         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << 0.0        // ay
+         << std::setw(14) << 0.0        // az
+         << std::setw(14) << 0.0        // bx
+         << std::setw(14) << data.Box_L // by
+         << std::setw(14) << 0.0        // bz
+         << std::setw(14) << 0.0        // cx
+         << std::setw(14) << 0.0        // cy
+         << std::setw(14) << data.Box_L // cz
+         << "\n";
 
+    for (size_t i = 0; i < data.n; ++i)
+    {
+        fout << std::setw(4) << "Cu"
+             << std::fixed << std::setprecision(8)
+             << std::setw(14) << FCC[i].x2
+             << std::setw(14) << FCC[i].y2
+             << std::setw(14) << FCC[i].z2
+             << std::setw(14) << FCC[i].xv2
+             << std::setw(14) << FCC[i].yv2
+             << std::setw(14) << FCC[i].zv2
+             << std::setw(14) << FCC[i].xdv2
+             << std::setw(14) << FCC[i].ydv2
+             << std::setw(14) << FCC[i].zdv2
+             << "\n";
+    }
+
+    fout.close();
+}
 // ------------------------------------------------------------
 // diamond
 // 8
-//  (0,0,0)
-//  (1/2,1/2,0)
-//  (1/2,0,1/2)
-//  (0,1/2,1/2)
-//  (1/4,1/4,1/4)
-//  (3/4,3/4,1/4)
-//  (3/4,1/4,3/4)
-//  (1/4,3/4,3/4)
+// (0,0,0)
+// (1/2,1/2,0)
+// (1/2,0,1/2)
+// (0,1/2,1/2)
+// (1/4,1/4,1/4)
+// (3/4,3/4,1/4)
+// (3/4,1/4,3/4)
+// (1/4,3/4,3/4)
 // ------------------------------------------------------------
-void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Data_dummy)
+
+void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Data)
 {
+    // random first atom position r0
     Vector3d r0(MolecularData.x0, MolecularData.y0, MolecularData.z0);
 
-    Matrix3d A;
-    A << data.a0, 0,        0,
-         0,       data.a0,  0,
-         0,       0,        data.a0;
-
-    Matrix3d Rmat = make_rotation(data.theta, data.phi);
-    Matrix3d A_rot = Rmat * A;
-
-    struct DiamondBasis { double fx, fy, fz; };
+    // rotation matrix
+    Matrix3d R = Rotation(data.theta, data.phi);
+    Matrix3d A = A0(data);
+    Matrix3d A_rot = R * A;
+    // diamond
+    // 8
+    // (0,0,0)
+    // (1/2,1/2,0)
+    // (1/2,0,1/2)
+    // (0,1/2,1/2)
+    // (1/4,1/4,1/4)
+    // (3/4,3/4,1/4)
+    // (3/4,1/4,3/4)
+    // (1/4,3/4,3/4)
+    struct DiamondBasis
+    {
+        double fx, fy, fz;
+    };
     DiamondBasis basis[8] = {
-        {0.0 , 0.0 , 0.0},
-        {0.5 , 0.5 , 0.0},
-        {0.5 , 0.0 , 0.5},
-        {0.0 , 0.5 , 0.5},
+        {0.0, 0.0, 0.0},
+        {0.5, 0.5, 0.0},
+        {0.5, 0.0, 0.5},
+        {0.0, 0.5, 0.5},
         {0.25, 0.25, 0.25},
         {0.75, 0.75, 0.25},
         {0.75, 0.25, 0.75},
-        {0.25, 0.75, 0.75}
-    };
+        {0.25, 0.75, 0.75}};
 
+    // Box calculation
     int nx_est, ny_est, nz_est;
-    estimate_cells(A_rot, data.Box_L, nx_est, ny_est, nz_est);
+    Box(A_rot, data, nx_est, ny_est, nz_est);
 
+    // one diamond cell has 8 atoms
     Diamond.clear();
     Diamond.reserve(nx_est * ny_est * nz_est * 8);
 
+    // --------------------------------------------
     for (int ix = 0; ix < nx_est; ++ix)
     {
         for (int iy = 0; iy < ny_est; ++iy)
         {
             for (int iz = 0; iz < nz_est; ++iz)
             {
-                Vector3d n_cell(ix, iy, iz);
+                Vector3d i(ix, iy, iz);
 
-                for (int b = 0; b < 8; ++b)
+                for (int b = 0; b < 8; ++b) // diamond 8 basis atoms
                 {
-                    Vector3d frac(n_cell(0) + basis[b].fx,
-                                  n_cell(1) + basis[b].fy,
-                                  n_cell(2) + basis[b].fz);
+                    Vector3d frac(i(0) + basis[b].fx, // fractional coordinates
+                                  i(1) + basis[b].fy,
+                                  i(2) + basis[b].fz);
 
                     Vector3d r_cart = A_rot * frac + r0;
 
@@ -418,25 +507,29 @@ void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Da
                     double y = r_cart(1);
                     double z = r_cart(2);
 
+                    // in box
                     if (x >= 0.0 && y >= 0.0 && z >= 0.0 &&
                         x < data.Box_L &&
                         y < data.Box_L &&
                         z < data.Box_L)
                     {
-                        DiamondData atom;
-                        atom.x3 = x;
-                        atom.y3 = y;
-                        atom.z3 = z;
+                        DiamondData dia;
+                        dia.x3 = x;
+                        dia.y3 = y;
+                        dia.z3 = z;
 
-                        atom.xv3 = 0.0;
-                        atom.yv3 = 0.0;
-                        atom.zv3 = 0.0;
+                        // dia.xv3 = dia.xdv3;
+                        // dia.yv3 = dia.ydv3;
+                        // dia.zv3 = dia.zdv3;
+                        dia.xv3 = 0.0;
+                        dia.yv3 = 0.0;
+                        dia.zv3 = 0.0;
 
-                        atom.xdv3 = 0.0;
-                        atom.ydv3 = 0.0;
-                        atom.zdv3 = 0.0;
+                        dia.xdv3 = 0.0;
+                        dia.ydv3 = 0.0;
+                        dia.zdv3 = 0.0;
 
-                        Diamond.push_back(atom);
+                        Diamond.push_back(dia);
                     }
                 }
             }
@@ -444,23 +537,47 @@ void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Da
     }
 
     data.n = static_cast<int>(Diamond.size());
-
-    /*  // 输出到文件的例子
-    {
-        std::ofstream fout("diamond_out.xyz");
-        fout << Diamond.size() << "\n";
-        fout << "Diamond structure\n";
-        for (size_t i = 0; i < Diamond.size(); ++i)
-        {
-            fout << "C "
-                 << Diamond[i].x3 << " "
-                 << Diamond[i].y3 << " "
-                 << Diamond[i].z3 << "\n";
-        }
-    }
-    */
 }
+void output_diamond(const BasicData &data, const std::vector<DiamondData> &Diamond,
+                const std::string &filename = "diamond.md")
+{
+    std::ofstream fout(filename);
+    fout << data.n << "\n";
+    fout << "time = " << data.T
+         << "(fs) Energy = " << data.E
+         << "(eV)" << "\n";
 
+    fout << "BOX"
+         << std::fixed << std::setprecision(8)
+         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << 0.0        // ay
+         << std::setw(14) << 0.0        // az
+         << std::setw(14) << 0.0        // bx
+         << std::setw(14) << data.Box_L // by
+         << std::setw(14) << 0.0        // bz
+         << std::setw(14) << 0.0        // cx
+         << std::setw(14) << 0.0        // cy
+         << std::setw(14) << data.Box_L // cz
+         << "\n";
+
+    for (size_t i = 0; i < data.n; ++i)
+    {
+        fout << std::setw(4) << "C"
+             << std::fixed << std::setprecision(8)
+             << std::setw(14) << Diamond[i].x3
+             << std::setw(14) << Diamond[i].y3
+             << std::setw(14) << Diamond[i].z3
+             << std::setw(14) << Diamond[i].xv3
+             << std::setw(14) << Diamond[i].yv3
+             << std::setw(14) << Diamond[i].zv3
+             << std::setw(14) << Diamond[i].xdv3
+             << std::setw(14) << Diamond[i].ydv3
+             << std::setw(14) << Diamond[i].zdv3
+             << "\n";
+    }
+
+    fout.close();
+}
 
 // ------------------------------------------------------------
 // main program
@@ -468,44 +585,46 @@ void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Da
 int main()
 {
     BasicData data;
+    FirstMolecularData firstMol;
+
+    // 1. 读基本输入
     read(data);
 
-    // 给分子起始点一个随机的小平移
-    FirstMolecularData MolecularData;
-    random(MolecularData, data.a0);
+    // 2. 随机给第一个原子一个小位移，打破完美周期避免(0,0,0)正好卡在box边界
+    random(firstMol, data.a0);
 
-    cout << "You have input: "
-         << "E = "      << data.E
-         << ", a0 = "   << data.a0
-         << ", Box_L = "<< data.Box_L
-         << ", theta = "<< data.theta
-         << ", phi = "  << data.phi
-         << std::endl;
+    // 3. 选择结构
+    cout << "choose structure type: 1 = BCC (W), 2 = FCC (W), 3 = Diamond (C)" << endl;
+    int choice;
+    cin >> choice;
 
-    // 生成 BCC / FCC / Diamond 任选其一
-    // 你可以根据需要调用其中一个
+    // 4. 生成并输出
+    if (choice == 1)
     {
-        BCCData dummy_bcc; // 只是为了保持你的函数签名
-        bcc(MolecularData, data, dummy_bcc);
-
-        cout << "BCC atoms generated: " << BCC.size() << std::endl;
+        BCCData dummy;
+        bcc(firstMol, data, dummy);
+        output_bcc(data, BCC, "bcc.md");
+        cout << "[BCC] generated " << data.n << " atoms, written to bcc.md\n";
     }
-
+    else if (choice == 2)
     {
-        FCCData dummy_fcc;
-        fcc(MolecularData, data, dummy_fcc);
-
-        cout << "FCC atoms generated: " << FCC.size() << std::endl;
+        FCCData dummy;
+        fcc(firstMol, data, dummy);
+        output_fcc(data, FCC, "fcc.md");
+        cout << "[FCC] generated " << data.n << " atoms, written to fcc.md\n";
     }
-
+    else if (choice == 3)
     {
-        DiamondData dummy_dia;
-        diamond(MolecularData, data, dummy_dia);
-
-        cout << "Diamond atoms generated: " << Diamond.size() << std::endl;
+        DiamondData dummy;
+        diamond(firstMol, data, dummy);
+        output_diamond(data, Diamond, "diamond.md");
+        cout << "[Diamond] generated " << data.n << " atoms, written to diamond.md\n";
     }
-
-    cout << "Final data.n = " << data.n << std::endl;
+    else
+    {
+        cerr << "invalid choice.\n";
+        return 1;
+    }
 
     return 0;
 }
