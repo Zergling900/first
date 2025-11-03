@@ -158,18 +158,17 @@ void Box(const Matrix3d &A_rot, const BasicData &data, int &nx_est, int &ny_est,
     double dy = Step(a2);
     double dz = Step(a3);
 
-    if (dx < 1e-14)
-        dx = 1e-14;
-    if (dy < 1e-14)
-        dy = 1e-14;
-    if (dz < 1e-14)
-        dz = 1e-14;
+    if (dx < 1e-6)
+        dx = 1e-6;
+    if (dy < 1e-6)
+        dy = 1e-6;
+    if (dz < 1e-6)
+        dz = 1e-6;
 
-    nx_est = static_cast<int>(std::ceil(data.Box_L / dx)) + 2;
-    ny_est = static_cast<int>(std::ceil(data.Box_L / dy)) + 2;
-    nz_est = static_cast<int>(std::ceil(data.Box_L / dz)) + 2;
+    nx_est = static_cast<int>(std::ceil(data.Box_L / dx)) + 1;
+    ny_est = static_cast<int>(std::ceil(data.Box_L / dy)) + 1;
+    nz_est = static_cast<int>(std::ceil(data.Box_L / dz)) + 1;
 }
-
 // calculation method
 //   1. A_rot = R * A
 //   2. calculate nx,ny,nz
@@ -208,11 +207,11 @@ void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data)
     BCC.reserve(nx_est * ny_est * nz_est * 2);
 
     // --------------------------------------------
-    for (int ix = 0; ix < nx_est; ++ix)
+    for (int ix = 0; ix <= nx_est; ++ix)
     {
-        for (int iy = 0; iy < ny_est; ++iy)
+        for (int iy = 0; iy <= ny_est; ++iy)
         {
-            for (int iz = 0; iz < nz_est; ++iz)
+            for (int iz = 0; iz <= nz_est; ++iz)
             {
                 Vector3d i(ix, iy, iz);
 
@@ -259,6 +258,7 @@ void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data)
 
     data.n = static_cast<int>(BCC.size());
 }
+
 void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
                 const std::string &filename = "bcc.md")
 {
@@ -270,7 +270,7 @@ void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << data.Box_L // ax
          << std::setw(14) << 0.0        // ay
          << std::setw(14) << 0.0        // az
          << std::setw(14) << 0.0        // bx
@@ -281,7 +281,7 @@ void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
          << std::setw(14) << data.Box_L // cz
          << "\n";
 
-    for (size_t i = 0; i < data.n; ++i)
+    for (size_t i = 0; i <= data.n; ++i)
     {
         fout << std::setw(4) << "W"
              << std::fixed << std::setprecision(8)
@@ -341,11 +341,11 @@ void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data)
     FCC.reserve(nx_est * ny_est * nz_est * 4);
 
     // --------------------------------------------
-    for (int ix = 0; ix < nx_est; ++ix)
+    for (int ix = 0; ix <= nx_est; ++ix)
     {
-        for (int iy = 0; iy < ny_est; ++iy)
+        for (int iy = 0; iy <= ny_est; ++iy)
         {
-            for (int iz = 0; iz < nz_est; ++iz)
+            for (int iz = 0; iz <= nz_est; ++iz)
             {
                 Vector3d i(ix, iy, iz);
 
@@ -403,7 +403,7 @@ void output_fcc(const BasicData &data, const std::vector<FCCData> &FCC,
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << data.Box_L // ax
          << std::setw(14) << 0.0        // ay
          << std::setw(14) << 0.0        // az
          << std::setw(14) << 0.0        // bx
@@ -487,11 +487,11 @@ void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Da
     Diamond.reserve(nx_est * ny_est * nz_est * 8);
 
     // --------------------------------------------
-    for (int ix = 0; ix < nx_est; ++ix)
+    for (int ix = 0; ix <= nx_est; ++ix)
     {
-        for (int iy = 0; iy < ny_est; ++iy)
+        for (int iy = 0; iy <= ny_est; ++iy)
         {
-            for (int iz = 0; iz < nz_est; ++iz)
+            for (int iz = 0; iz <= nz_est; ++iz)
             {
                 Vector3d i(ix, iy, iz);
 
@@ -549,7 +549,7 @@ void output_diamond(const BasicData &data, const std::vector<DiamondData> &Diamo
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(13) << data.Box_L // ax
+         << std::setw(14) << data.Box_L // ax
          << std::setw(14) << 0.0        // ay
          << std::setw(14) << 0.0        // az
          << std::setw(14) << 0.0        // bx
@@ -587,18 +587,18 @@ int main()
     BasicData data;
     FirstMolecularData firstMol;
 
-    // 1. 读基本输入
+    // 1. read
     read(data);
 
-    // 2. 随机给第一个原子一个小位移，打破完美周期避免(0,0,0)正好卡在box边界
+    // 2. first atom random
     random(firstMol, data.a0);
 
-    // 3. 选择结构
+    // 3. bcc or fcc diamond
     cout << "choose structure type: 1 = BCC (W), 2 = FCC (W), 3 = Diamond (C)" << endl;
     int choice;
     cin >> choice;
 
-    // 4. 生成并输出
+    // 4. output
     if (choice == 1)
     {
         BCCData dummy;
