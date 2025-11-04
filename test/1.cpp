@@ -260,40 +260,40 @@ void bcc(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data)
 }
 
 void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
-                const std::string &filename = "bcc.md")
+                const std::string &filename = "bcc.md3")
 {
     std::ofstream fout(filename);
     fout << data.n << "\n";
-    fout << "time = " << data.T
-         << "(fs) Energy = " << data.E
-         << "(eV)" << "\n";
+    fout << "   time=   " << data.T
+         << " (fs)  Energy=  " << data.E
+         << " (eV)" << "\n";
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(14) << data.Box_L // ax
-         << std::setw(14) << 0.0        // ay
-         << std::setw(14) << 0.0        // az
-         << std::setw(14) << 0.0        // bx
-         << std::setw(14) << data.Box_L // by
-         << std::setw(14) << 0.0        // bz
-         << std::setw(14) << 0.0        // cx
-         << std::setw(14) << 0.0        // cy
-         << std::setw(14) << data.Box_L // cz
+         << std::setw(18) << data.Box_L // ax
+         << std::setw(16) << 0.0        // ay
+         << std::setw(16) << 0.0        // az
+         << std::setw(16) << 0.0        // bx
+         << std::setw(16) << data.Box_L // by
+         << std::setw(16) << 0.0        // bz
+         << std::setw(16) << 0.0        // cx
+         << std::setw(16) << 0.0        // cy
+         << std::setw(16) << data.Box_L // cz
          << "\n";
 
-    for (size_t i = 0; i <= data.n; ++i)
+    for (size_t i = 0; i < data.n; ++i)
     {
         fout << std::setw(4) << "W"
              << std::fixed << std::setprecision(8)
-             << std::setw(14) << BCC[i].x1
-             << std::setw(14) << BCC[i].y1
-             << std::setw(14) << BCC[i].z1
-             << std::setw(14) << BCC[i].xv1
-             << std::setw(14) << BCC[i].yv1
-             << std::setw(14) << BCC[i].zv1
-             << std::setw(14) << BCC[i].xdv1
-             << std::setw(14) << BCC[i].ydv1
-             << std::setw(14) << BCC[i].zdv1
+             << std::setw(18) << BCC[i].x1
+             << std::setw(16) << BCC[i].y1
+             << std::setw(16) << BCC[i].z1
+             << std::setw(16) << BCC[i].xv1
+             << std::setw(16) << BCC[i].yv1
+             << std::setw(16) << BCC[i].zv1
+             << std::setw(16) << BCC[i].xdv1
+             << std::setw(16) << BCC[i].ydv1
+             << std::setw(16) << BCC[i].zdv1
              << "\n";
     }
 
@@ -393,40 +393,40 @@ void fcc(FirstMolecularData &MolecularData, BasicData &data, FCCData &Data)
     data.n = static_cast<int>(FCC.size());
 }
 void output_fcc(const BasicData &data, const std::vector<FCCData> &FCC,
-                const std::string &filename = "fcc.md")
+                const std::string &filename = "fcc.md3")
 {
     std::ofstream fout(filename);
     fout << data.n << "\n";
-    fout << "time = " << data.T
-         << "(fs) Energy = " << data.E
-         << "(eV)" << "\n";
+    fout << "   time=   " << data.T
+         << " (fs)  Energy=  " << data.E
+         << " (eV)" << "\n";
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(14) << data.Box_L // ax
-         << std::setw(14) << 0.0        // ay
-         << std::setw(14) << 0.0        // az
-         << std::setw(14) << 0.0        // bx
-         << std::setw(14) << data.Box_L // by
-         << std::setw(14) << 0.0        // bz
-         << std::setw(14) << 0.0        // cx
-         << std::setw(14) << 0.0        // cy
-         << std::setw(14) << data.Box_L // cz
+         << std::setw(18) << data.Box_L // ax
+         << std::setw(16) << 0.0        // ay
+         << std::setw(16) << 0.0        // az
+         << std::setw(16) << 0.0        // bx
+         << std::setw(16) << data.Box_L // by
+         << std::setw(16) << 0.0        // bz
+         << std::setw(16) << 0.0        // cx
+         << std::setw(16) << 0.0        // cy
+         << std::setw(16) << data.Box_L // cz
          << "\n";
 
     for (size_t i = 0; i < data.n; ++i)
     {
         fout << std::setw(4) << "Cu"
              << std::fixed << std::setprecision(8)
-             << std::setw(14) << FCC[i].x2
-             << std::setw(14) << FCC[i].y2
-             << std::setw(14) << FCC[i].z2
-             << std::setw(14) << FCC[i].xv2
-             << std::setw(14) << FCC[i].yv2
-             << std::setw(14) << FCC[i].zv2
-             << std::setw(14) << FCC[i].xdv2
-             << std::setw(14) << FCC[i].ydv2
-             << std::setw(14) << FCC[i].zdv2
+             << std::setw(18) << FCC[i].x2
+             << std::setw(16) << FCC[i].y2
+             << std::setw(16) << FCC[i].z2
+             << std::setw(16) << FCC[i].xv2
+             << std::setw(16) << FCC[i].yv2
+             << std::setw(16) << FCC[i].zv2
+             << std::setw(16) << FCC[i].xdv2
+             << std::setw(16) << FCC[i].ydv2
+             << std::setw(16) << FCC[i].zdv2
              << "\n";
     }
 
@@ -539,40 +539,40 @@ void diamond(FirstMolecularData &MolecularData, BasicData &data, DiamondData &Da
     data.n = static_cast<int>(Diamond.size());
 }
 void output_diamond(const BasicData &data, const std::vector<DiamondData> &Diamond,
-                const std::string &filename = "diamond.md")
+                const std::string &filename = "diamond.md3")
 {
     std::ofstream fout(filename);
     fout << data.n << "\n";
-    fout << "time = " << data.T
-         << "(fs) Energy = " << data.E
-         << "(eV)" << "\n";
+    fout << "   time=   " << data.T
+         << " (fs)  Energy=  " << data.E
+         << " (eV)" << "\n";
 
     fout << "BOX"
          << std::fixed << std::setprecision(8)
-         << std::setw(14) << data.Box_L // ax
-         << std::setw(14) << 0.0        // ay
-         << std::setw(14) << 0.0        // az
-         << std::setw(14) << 0.0        // bx
-         << std::setw(14) << data.Box_L // by
-         << std::setw(14) << 0.0        // bz
-         << std::setw(14) << 0.0        // cx
-         << std::setw(14) << 0.0        // cy
-         << std::setw(14) << data.Box_L // cz
+         << std::setw(18) << data.Box_L // ax
+         << std::setw(16) << 0.0        // ay
+         << std::setw(16) << 0.0        // az
+         << std::setw(16) << 0.0        // bx
+         << std::setw(16) << data.Box_L // by
+         << std::setw(16) << 0.0        // bz
+         << std::setw(16) << 0.0        // cx
+         << std::setw(16) << 0.0        // cy
+         << std::setw(16) << data.Box_L // cz
          << "\n";
 
     for (size_t i = 0; i < data.n; ++i)
     {
         fout << std::setw(4) << "C"
              << std::fixed << std::setprecision(8)
-             << std::setw(14) << Diamond[i].x3
-             << std::setw(14) << Diamond[i].y3
-             << std::setw(14) << Diamond[i].z3
-             << std::setw(14) << Diamond[i].xv3
-             << std::setw(14) << Diamond[i].yv3
-             << std::setw(14) << Diamond[i].zv3
-             << std::setw(14) << Diamond[i].xdv3
-             << std::setw(14) << Diamond[i].ydv3
-             << std::setw(14) << Diamond[i].zdv3
+             << std::setw(18) << Diamond[i].x3
+             << std::setw(16) << Diamond[i].y3
+             << std::setw(16) << Diamond[i].z3
+             << std::setw(16) << Diamond[i].xv3
+             << std::setw(16) << Diamond[i].yv3
+             << std::setw(16) << Diamond[i].zv3
+             << std::setw(16) << Diamond[i].xdv3
+             << std::setw(16) << Diamond[i].ydv3
+             << std::setw(16) << Diamond[i].zdv3
              << "\n";
     }
 
@@ -593,8 +593,8 @@ int main()
     // 2. first atom random
     random(firstMol, data.a0);
 
-    // 3. bcc or fcc diamond
-    cout << "choose structure type: 1 = BCC (W), 2 = FCC (W), 3 = Diamond (C)" << endl;
+    // 3. bcc or fcc or diamond
+    cout << "choose structure type: 1 = BCC (W), 2 = FCC (Cu), 3 = Diamond (C)" << endl;
     int choice;
     cin >> choice;
 
@@ -603,22 +603,22 @@ int main()
     {
         BCCData dummy;
         bcc(firstMol, data, dummy);
-        output_bcc(data, BCC, "bcc.md");
-        cout << "[BCC] generated " << data.n << " atoms, written to bcc.md\n";
+        output_bcc(data, BCC, "bcc.md3");
+        cout << "[BCC] generated " << data.n << "written to bcc.md3\n";
     }
     else if (choice == 2)
     {
         FCCData dummy;
         fcc(firstMol, data, dummy);
-        output_fcc(data, FCC, "fcc.md");
-        cout << "[FCC] generated " << data.n << " atoms, written to fcc.md\n";
+        output_fcc(data, FCC, "fcc.md3");
+        cout << "[FCC] generated " << data.n << "written to fcc.md3\n";
     }
     else if (choice == 3)
     {
         DiamondData dummy;
         diamond(firstMol, data, dummy);
-        output_diamond(data, Diamond, "diamond.md");
-        cout << "[Diamond] generated " << data.n << " atoms, written to diamond.md\n";
+        output_diamond(data, Diamond, "diamond.md3");
+        cout << "[Diamond] generated " << data.n << "written to diamond.md3\n";
     }
     else
     {
