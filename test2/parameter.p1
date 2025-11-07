@@ -1,0 +1,41 @@
+energy                 0.0
+Box_Lx                 0.0
+Box_Ly                 0.0
+Box_Lz                 0.0
+
+Cell_Lx                0.0
+
+//basic(or not) lattice constant
+ax                  0.0 0.0 0.0
+ay                  0.0 0.0 0.0
+az                  0.0 0.0 0.0
+
+
+//angle(theta is y axis, phi is z axis)
+theta.xy               0.0
+theta.xz               0.0
+theta.yz               0.0
+
+//unit cell （Periodic1 & fractional coordinates）
+// Element1
+Element            W
+coordinates         0.0 0.0 0.0
+                    0.0 0.0 0.0
+                    //0.0 0.0 0.0
+                    //0.0 0.0 0.0
+
+
+// Element2
+//Element            W
+//coordinates         0.0 0.0 0.0
+//                    0.0 0.0 0.0
+//                    0.0 0.0 0.0
+//                    0.0 0.0 0.0
+
+
+// Element3
+//Element            W
+//coordinates         0.0 0.0 0.0
+//                    0.0 0.0 0.0
+//                    0.0 0.0 0.0
+//                    0.0 0.0 0.0
