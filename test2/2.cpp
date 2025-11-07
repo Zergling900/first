@@ -6,39 +6,13 @@
 #include <iomanip>
 #include <eigen3/Eigen/Dense>
 
-#include "basicdata.cpp"
-#include "calatedata.cpp"
+#include "2.h"
 
 using namespace Eigen;
 using namespace std;
 
 // ----------------------------
 
-void read(BasicData &data)
-{
-    cout << "please input energy 'E', cubic side length 'a0', box size 'Box_L', 'theta', 'phi': " << std::endl;
-    cin >> data.E >> data.a0 >> data.Box_L >> data.theta >> data.phi;
-    // ----------------
-    data.n = 0;
-    data.T = 0.0;
-
-    // angle to radian
-    const double deg2rad = M_PI / 180.0;
-    data.theta *= deg2rad;
-    data.phi *= deg2rad;
-}
-
-// ----------------------------
-/*
-a0 = a0 0 0
-     0  a0 0
-     0  0  a0
-
-A_rot = R * A = Ry * Rz *A
-      =  ct, 0, st,        cp, -sp, 0         a0, 0, 0
-         0 , 1, 0,    X    sp,  cp, 0    X    0, a0, 0
-        -st, 0, ct;        0 ,  0,  1.        0, 0, a0
-*/
 // ----------------------------
 void Box(const Matrix3d &A_rot, const BasicData &data, int &nx_est, int &ny_est, int &nz_est)
 {
