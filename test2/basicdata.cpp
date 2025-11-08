@@ -12,20 +12,47 @@ using namespace Eigen;
 using namespace std;
 
 // ----------------------------
-Matrix3d Cell0(const BasicData &data)
-{    
-    Matrix3d Cell0;
-    Cell0 << data.Box_Lx, 0, 0,
-             0, data.Box_Ly, 0,
-             0, 0, data.Box_Lz;
+Matrix3d CellVector(const BasicData &data)
+{
+    const double a = data.Cell_La;
+    const double b = data.Cell_Lb;
+    const double c = data.Cell_Lc;
 
-    Matrix3d R;
-        R = AngleAxisd(data.thetayz, Vector3d::UnitX())   //  x
-        * AngleAxisd(data.thetaxz, Vector3d::UnitY())   //  y
-        * AngleAxisd(data.thetaxy, Vector3d::UnitZ());  //  z
-    return R * Cell0;
+    // 角度转弧度
+    const double alpha = data.cell_angle_alpha * M_PI / 180.0;
+    const double beta  = data.cell_angle_beta  * M_PI / 180.0;
+    const double gamma = data.cell_angle_gamma * M_PI / 180.0;
+
+    const double ca = std::cos(alpha);
+    const double cb = std::cos(beta);
+    const double cg = std::cos(gamma);
+    const double sg = std::sin(gamma);
+
+    Matrix3d Cell; // 3*3
+
+    // 1 list a = a*(1, 0, 0)
+    Cell(0,0) = data.Cell_La;
+    Cell(1,0) = 0.0;
+    Cell(2,0) = 0.0;
+
+    // 2 list b = b*(cos(γ), sin(γ), 0 )
+    Cell(0,1) = data.Cell_Lb * cg;
+    Cell(1,1) = data.Cell_Lb * sg;
+    Cell(2,1) = 0.0;
+
+    // 3 list c = c* (cos(β), (cos(α) - cos(β)*cos(γ)) / sin(γ),
+    //                1 + 2*cos(α)*cos(β)*cos(γ)- cos(α)*cos(α)
+    //                - cos(β)*cos(β)- cos(γ)*cos(γ)) / sin(γ))
+    Cell(0,2) = data.Cell_Lc * cb;
+    Cell(1,2) = data.Cell_Lc * (ca - cb * cg) / sg;
+    Cell(2,2) = data.Cell_Lc * std::sqrt
+    (
+        1.0 + 2.0 * ca * cb * cg
+        - ca * ca - cb * cb - cg * cg
+    ) / sg;
+
+    return Cell;
 }
-
 //-----------------------------
 Vector3d Step(const Matrix3d &Cell)
 {
@@ -39,22 +66,17 @@ Vector3d Step(const Matrix3d &Cell)
 
 // random (first molecular)
 std::mt19937 global_eng(std::random_device{}());
-void random(const BasicData &data, FirstMolecularData &MolecularData, double scale, const Matrix3d &Cell)
+Vector3d random(const BasicData &data, const Matrix3d &Cell)
 {
-double f = data.Cell_Lz;
+double f = data.Cell_La;
 
-if (f < data.Cell_Ly)
-    f = data.Cell_Ly;
+if (f < data.Cell_Lb)
+    f = data.Cell_Lb;
 
-if (f < data.Cell_Lx)
-    f = data.Cell_Lx;
-    std::uniform_real_distribution<> distr(-scale, scale); 
+if (f < data.Cell_Lc)
+    f = data.Cell_Lc;
+    std::uniform_real_distribution<> distr(0, 0.0 * f); 
     Vector3d duvw(distr(global_eng), distr(global_eng), distr(global_eng));
-    Vector3d r0 = Cell * duvw;
-
-    MolecularData.x0 = r0(0);
-    MolecularData.y0 = r0(1);
-    MolecularData.z0 = r0(2);
+    return Cell * duvw;
 }
 //
-

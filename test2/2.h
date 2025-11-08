@@ -17,16 +17,12 @@ struct BasicData
     int n;        // number of atoms
     double T;     // unknown
     double E;     // energy
-    double Box_Lx,Box_Ly,Box_Lz;// box size
-    double Cell_Lx, Cell_Ly, Cell_Lz;// unit cell sizs
+    double Box_Ln, Box_Lx,Box_Ly,Box_Lz;// box size
+    string AtomName;//
+    double Cell_La, Cell_Lb, Cell_Lc;// unit cell sizs
+    double cell_angle_alpha, cell_angle_beta, cell_angle_gamma; //unit cell angle
     double axx,axy,axz,ayx,ayy,ayz,aza,azy,azz;    //
-
-    double thetaxy,thetaxz,thetayz; //
-};
-
-struct FirstMolecularData
-{
-    double x0, y0, z0;
+    double randommultiplier;//
 };
 
 //-----------------------------------------------
