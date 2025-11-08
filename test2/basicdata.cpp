@@ -18,7 +18,7 @@ Matrix3d CellVector(const BasicData &data)
     const double b = data.Cell_Lb;
     const double c = data.Cell_Lc;
 
-    // 角度转弧度
+    // 
     const double alpha = data.cell_angle_alpha * M_PI / 180.0;
     const double beta  = data.cell_angle_beta  * M_PI / 180.0;
     const double gamma = data.cell_angle_gamma * M_PI / 180.0;
