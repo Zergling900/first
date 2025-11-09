@@ -1,14 +1,17 @@
+data_file_name         SiO2.md3
+
+n                      0
 time                   0.0
 energy                 0.0
-Box_Ln                 0.0
+Box_Ln                 1.0
 Box_Lx                 0.0
 Box_Ly                 0.0
 Box_Lz                 0.0
 
 //basic(or not) lattice constant
-ax                  0.0 0.0 0.0
-ay                  0.0 0.0 0.0
-az                  0.0 0.0 0.0
+//ax                  0.0 0.0 0.0
+//ay                  0.0 0.0 0.0
+//az                  0.0 0.0 0.0
 
 
 //SiO2

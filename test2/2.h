@@ -12,17 +12,34 @@
 using namespace Eigen;
 using namespace std;
 // ----------------------------
+//int n;        // number of atoms
 struct BasicData
 {
-    int n;        // number of atoms
     double T;     // unknown
     double E;     // energy
     double Box_Ln, Box_Lx,Box_Ly,Box_Lz;// box size
+    string data_file_name;//
     string AtomName;//
     double Cell_La, Cell_Lb, Cell_Lc;// unit cell sizs
     double cell_angle_alpha, cell_angle_beta, cell_angle_gamma; //unit cell angle
-    double axx,axy,axz,ayx,ayy,ayz,aza,azy,azz;    //
+    //double axx,axy,axz,ayx,ayy,ayz,aza,azy,azz;    //
     double randommultiplier;//
+};
+//----------------------------------------
+//  _atom_site_type_symbol
+//  _atom_site_label
+//  _atom_site_symmetry_multiplicity
+//  _atom_site_fract_x
+//  _atom_site_fract_y
+//  _atom_site_fract_z
+//  _atom_site_occupancy
+struct Atom 
+{
+    string type;
+    string label;
+    string symmetry_multiplicity;
+    double x0, y0, z0;
+    string occupancy;
 };
 
 //-----------------------------------------------
@@ -38,13 +55,35 @@ struct BasicData
 // -----------------------------------------------
 struct Data
 {
+    string name;
     double x, y, z;
-    double xv, yv, zv;
-    double xdv, ydv, zdv;
+    double vx, vy, vz;
+    double dvx, dvy, dvz;
 };
-using BCCData = Data;
-using FCCData = Data;
-using DiamondData = Data;
-std::vector<BCCData> BCC;
-std::vector<FCCData> FCC;
-std::vector<DiamondData> Diamond;
+
+// struct OutPutData
+// {
+//     string name;
+//     double x, y, z;
+//     double vx, vy, vz;
+//     double dvx, dvy, dvz;
+// };
+
+Matrix3d CellVector(const BasicData &data);
+Vector3d Step(const Matrix3d &Cell);
+// Vector3d random(const BasicData &data,const Matrix3d &Cell);
+
+void read1(BasicData &data, vector<Atom> &atoms);
+void read2(Data &data);
+void build( const vector<Atom> &atoms,
+            const Data &data1,
+            vector<Data> &datas);
+void calculate(int &n,
+               const BasicData &data,
+               const Matrix3d &Cell,
+               const vector<Data> &datas,
+               vector<Data> &output);
+
+void Output(const int &n, const BasicData &data,
+                vector<Data> &output,const Matrix3d &Cell,
+                const string &filename);
