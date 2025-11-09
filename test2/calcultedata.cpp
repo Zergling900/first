@@ -6,126 +6,79 @@
 #include <iomanip>
 #include <eigen3/Eigen/Dense>
 
+#include "2.h"
 
-void calculate(FirstMolecularData &MolecularData, BasicData &data, BCCData &Data)
+using namespace Eigen;
+using namespace std;
+
+//----------------------------------------
+// make first unit data
+void build(const vector<Atom> &atoms,
+           const Data &data1,
+           vector<Data> &datas)
 {
-    // random first atom position r0
-    Vector3d r0(MolecularData.x0, MolecularData.y0, MolecularData.z0);
+    datas.clear();
+    datas.reserve(atoms.size());
 
-    // rotation matrix
-    Matrix3d R = Rotation(data.theta, data.phi);
-    Matrix3d A = A0(data);
-    Matrix3d A_rot = R * A;
-    // BCC basis
-    // 2
-    // (0,0,0)
-    //(1/2,1/2,1/2)
-    struct BCCBasis
+    for (const auto &atom : atoms)
     {
-        double fx, fy, fz;
-    };
-    BCCBasis basis[2] = {
-        {0.0, 0.0, 0.0},
-        {0.5, 0.5, 0.5}};
-
-    // Box calculation
-    int nx_est, ny_est, nz_est;
-    Box(A_rot, data, nx_est, ny_est, nz_est);
-
-    // one bcc cell has 2 atoms
-    BCC.clear();
-    BCC.reserve(nx_est * ny_est * nz_est * 2);
-
+        Data d = data1;
+        d.name = atom.type;
+        d.x = atom.x0;
+        d.y = atom.y0;
+        d.z = atom.z0;
+        datas.push_back(d);
+    }
+}
+void calculate(int &n,
+               const BasicData &data,
+               const Matrix3d &Cell,
+               const vector<Data> &datas,
+               vector<Data> &output)
+{
     // --------------------------------------------
-    for (int ix = 0; ix <= nx_est; ++ix)
+    output.clear();
+
+    for (int ix = 0; ix < data.Box_Ln + 1; ++ix)
     {
-        for (int iy = 0; iy <= ny_est; ++iy)
+        for (int iy = 0; iy < data.Box_Ln + 1; ++iy)
         {
-            for (int iz = 0; iz <= nz_est; ++iz)
+            for (int iz = 0; iz < data.Box_Ln + 1; ++iz)
             {
-                Vector3d i(ix, iy, iz);
-
-                for (int b = 0; b < 2; ++b) // bcc 2 basis atoms
+                for (const auto &d : datas)
                 {
-                    Vector3d frac(i(0) + basis[b].fx, // fractional coordinates
-                                  i(1) + basis[b].fy,
-                                  i(2) + basis[b].fz);
+                    Data aaa = d;
 
-                    Vector3d r_cart = A_rot * frac + r0;
+                    Vector3d frac(d.x, d.y, d.z);
+                    Vector3d step(ix, iy, iz);
+                    Vector3d pos = frac + step;
+                    Vector3d r = Cell * pos;
+                    aaa.x = r.x();
+                    aaa.y = r.y();
+                    aaa.z = r.z();
 
-                    double x = r_cart(0);
-                    double y = r_cart(1);
-                    double z = r_cart(2);
-
-                    // in box
-                    if (x >= 0.0 && y >= 0.0 && z >= 0.0 &&
-                        x < data.Box_L &&
-                        y < data.Box_L &&
-                        z < data.Box_L)
-                    {
-                        BCCData bcc;
-                        bcc.x1 = x;
-                        bcc.y1 = y;
-                        bcc.z1 = z;
-
-                        // bcc.xv1 = bcc.xdv1;
-                        // bcc.yv1 = bcc.ydv1;
-                        // bcc.zv1 = bcc.zdv1;
-                        bcc.xv1 = 0.0;
-                        bcc.yv1 = 0.0;
-                        bcc.zv1 = 0.0;
-
-                        bcc.xdv1 = 0.0;
-                        bcc.ydv1 = 0.0;
-                        bcc.zdv1 = 0.0;
-
-                        BCC.push_back(bcc);
-                    }
+                    output.push_back(aaa);
                 }
             }
         }
     }
-
-    data.n = static_cast<int>(BCC.size());
+    n = static_cast<int>(output.size());
 }
 
-void output_bcc(const BasicData &data, const std::vector<BCCData> &BCC,
-                const std::string &filename = "bcc.md3")
+void Output(const int &n, const BasicData &data,
+                vector<Data> &output,const Matrix3d &Cell,
+                const string &filename)
 {
-    std::ofstream fout(filename);
-    fout << data.n << "\n";
-    fout << "   time=   " << data.T
-         << " (fs)  Energy=  " << data.E
-         << " (eV)" << "\n";
-
-    fout << "BOX"
-         << std::fixed << std::setprecision(8)
-         << std::setw(18) << data.Box_L // ax
-         << std::setw(16) << 0.0        // ay
-         << std::setw(16) << 0.0        // az
-         << std::setw(16) << 0.0        // bx
-         << std::setw(16) << data.Box_L // by
-         << std::setw(16) << 0.0        // bz
-         << std::setw(16) << 0.0        // cx
-         << std::setw(16) << 0.0        // cy
-         << std::setw(16) << data.Box_L // cz
-         << "\n";
-
-    for (size_t i = 0; i < data.n; ++i)
+    FILE *fp = fopen(filename.c_str(), "w");
+    Matrix3d Box = Cell * (data.Box_Ln + 1.0);
+    fprintf(fp, "%d\n", n);
+    fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.T, data.E);
+    fprintf(fp, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
+           Box(0, 0), Box(0, 1), Box(0, 2), Box(1, 0), Box(1, 1), Box(1, 2), Box(2, 0), Box(2, 1), Box(2, 2));
+    for(const auto &d : output)
     {
-        fout << std::setw(4) << "W"
-             << std::fixed << std::setprecision(8)
-             << std::setw(18) << BCC[i].x1
-             << std::setw(16) << BCC[i].y1
-             << std::setw(16) << BCC[i].z1
-             << std::setw(16) << BCC[i].xv1
-             << std::setw(16) << BCC[i].yv1
-             << std::setw(16) << BCC[i].zv1
-             << std::setw(16) << BCC[i].xdv1
-             << std::setw(16) << BCC[i].ydv1
-             << std::setw(16) << BCC[i].zdv1
-             << "\n";
+        fprintf(fp, " %4s  %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
+            d.name.c_str(),d.x,d.y,d.z,d.vx,d.vy,d.vz,d.dvx,d.dvy,d.dvz);
     }
-
-    fout.close();
+    fclose(fp);
 }
