@@ -20,8 +20,8 @@ struct BasicData
     double Box_Ln, Box_Lx,Box_Ly,Box_Lz;// box size
     string data_file_name;//
     string AtomName;//
-    double Cell_La, Cell_Lb, Cell_Lc;// unit cell sizs
-    double cell_angle_alpha, cell_angle_beta, cell_angle_gamma; //unit cell angle
+    double _cell_length_a, _cell_length_b, _cell_length_c;// unit cell sizs
+    double _cell_angle_alpha, _cell_angle_beta, _cell_angle_gamma; //unit cell angle
     //double axx,axy,axz,ayx,ayy,ayz,aza,azy,azz;    //
     double randommultiplier;//
 };
