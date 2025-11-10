@@ -1,9 +1,9 @@
-data_file_name         Data/bcc.10.md3
+data_file_name         Data/KCl.5.7.md3
 
 n                      0
 time                   0.0
 energy                 0.0
-Box_Ln                 4.0
+Box_Ln                 5.0
 Box_Lx                 0.0
 Box_Ly                 0.0
 Box_Lz                 0.0
@@ -21,15 +21,14 @@ Box_Lz                 0.0
 //angle(theta is y axis, phi is z axis)
 //can copy .cif data
 
-_cell_length_a   1.41421356
-_cell_length_b   1.00000000
-_cell_length_c   1.41421356
-_cell_angle_alpha   90.0
-_cell_angle_beta   90.00000000
-_cell_angle_gamma   90.00000000
+_cell_length_a   4.51388119
+_cell_length_b   4.51388119
+_cell_length_c   4.51388119
+_cell_angle_alpha   60.00000000
+_cell_angle_beta   60.00000000
+_cell_angle_gamma   60.00000000
 
 // atom site （can copy .cif data）
 coordinates
-  W  W0  1  0.00000000  0.0  0.0  1
-  W  W1  1  0.00000000  0.5  0.5  1
-
+  K  K0  1  0.00000000  0.00000000  0.00000000  1
+  Cl  Cl1  1  0.50000000  0.50000000  0.50000000  1
