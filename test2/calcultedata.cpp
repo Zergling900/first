@@ -52,6 +52,7 @@ void calculate(int &n,
                     Vector3d frac(d.x, d.y, d.z);
                     Vector3d step(ix, iy, iz);
                     Vector3d pos = frac + step;
+                    //Vector3d r = pos;
                     Vector3d r = Cell * pos;
                     aaa.x = r.x();
                     aaa.y = r.y();
@@ -74,7 +75,7 @@ void Output(const int &n, const BasicData &data,
     fprintf(fp, "%d\n", n);
     fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.T, data.E);
     fprintf(fp, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-           Box(0, 0), Box(0, 1), Box(0, 2), Box(1, 0), Box(1, 1), Box(1, 2), Box(2, 0), Box(2, 1), Box(2, 2));
+           Box(0, 0), Box(1, 0), Box(2, 0), Box(0, 1), Box(1, 1), Box(1, 2), Box(0, 2), Box(1, 2), Box(2, 2));
     for(const auto &d : output)
     {
         fprintf(fp, " %4s  %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
