@@ -67,11 +67,12 @@ void calculate(int &n,
 }
 
 void Output(const int &n, const BasicData &data,
-                vector<Data> &output,const Matrix3d &Cell,
-                const string &filename)
+                vector<Data> &output,const Matrix3d &Cell_L0,
+                const Matrix3d &Cell,const string &filename)
 {
     FILE *fp = fopen(filename.c_str(), "w");
-    Matrix3d Box = Cell * (data.Box_Ln + 1.0);
+    Matrix3d Box = Cell_L0 * (data.Box_Ln + 1.0);
+    //Matrix3d Box = Cell * (data.Box_Ln + 1.0);
     fprintf(fp, "%d\n", n);
     fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.T, data.E);
     fprintf(fp, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
