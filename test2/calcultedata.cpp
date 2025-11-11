@@ -32,7 +32,7 @@ void build(const vector<Atom> &atoms,
 }
 void calculate(int &n,
                const BasicData &data,
-               const Matrix3d &Cell,
+               const Matrix3d &Cell_L0,
                const vector<Data> &datas,
                vector<Data> &output)
 {
@@ -53,7 +53,7 @@ void calculate(int &n,
                     Vector3d step(ix, iy, iz);
                     Vector3d pos = frac + step;
                     //Vector3d r = pos;
-                    Vector3d r = Cell * pos;
+                    Vector3d r = Cell_L0 * pos;
                     aaa.x = r.x();
                     aaa.y = r.y();
                     aaa.z = r.z();
