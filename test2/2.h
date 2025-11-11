@@ -69,8 +69,9 @@ struct Data
 //     double dvx, dvy, dvz;
 // };
 
-Matrix3d CellVector(const BasicData &data);
-Vector3d Step(const Matrix3d &Cell);
+Matrix3d CellVector_L0(const BasicData &data);
+Matrix3d CellVector_A(const BasicData &data);
+Matrix3d CellVector_C(const Matrix3d &Cell_L0, const Matrix3d &Cell_A);
 // Vector3d random(const BasicData &data,const Matrix3d &Cell);
 
 void read1(BasicData &data, vector<Atom> &atoms);

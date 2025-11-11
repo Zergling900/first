@@ -36,11 +36,13 @@ int main()
     build(atoms, data1, datas);
 
     cout << "STEP 4: CellVector\n";
-    Matrix3d Cell = CellVector(data);
+    Matrix3d Cell_L0 = CellVector_L0(data);
+    Matrix3d Cell_A= CellVector_A(data);
+    Matrix3d Cell = CellVector_C(Cell_L0, Cell_A);
 
     cout << "STEP 5: calculate\n";
     int n = 0;
-    calculate(n, data, Cell, datas, output);
+    calculate(n, data, Cell_L0, datas, output);
 
     cout << "STEP 6: Output\n";
     Output(n, data, output, Cell, data.data_file_name);
