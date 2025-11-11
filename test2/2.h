@@ -86,5 +86,5 @@ void calculate(int &n,
                vector<Data> &output);
 
 void Output(const int &n, const BasicData &data,
-                vector<Data> &output,const Matrix3d &Cell,
-                const string &filename);
+                vector<Data> &output,const Matrix3d &Cell_L0,
+                const Matrix3d &Cell,const string &filename);

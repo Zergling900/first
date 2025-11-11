@@ -45,7 +45,7 @@ int main()
     calculate(n, data, Cell_L0, datas, output);
 
     cout << "STEP 6: Output\n";
-    Output(n, data, output, Cell, data.data_file_name);
+    Output(n, data, output, Cell_L0, Cell, data.data_file_name);
 
     cout << "DONE\n";
     return 0;
