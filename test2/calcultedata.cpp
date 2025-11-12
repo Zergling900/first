@@ -32,6 +32,7 @@ void build(const vector<Atom> &atoms,
 }
 void calculate(int &n,
                const BasicData &data,
+               const Matrix3d &Cell,
                const Matrix3d &Cell_L0,
                const vector<Data> &datas,
                vector<Data> &output)
@@ -39,11 +40,11 @@ void calculate(int &n,
     // --------------------------------------------
     output.clear();
 
-    for (int ix = 0; ix < data.Box_Ln + 1; ++ix)
+    for (int ix = 0; ix < data.Box_Ln + 1 ; ++ix)
     {
-        for (int iy = 0; iy < data.Box_Ln + 1; ++iy)
+        for (int iy = 0; iy < data.Box_Ln+ 1 ; ++iy)
         {
-            for (int iz = 0; iz < data.Box_Ln + 1; ++iz)
+            for (int iz = 0; iz < data.Box_Ln + 1 ; ++iz)
             {
                 for (const auto &d : datas)
                 {
@@ -53,7 +54,8 @@ void calculate(int &n,
                     Vector3d step(ix, iy, iz);
                     Vector3d pos = frac + step;
                     //Vector3d r = pos;
-                    Vector3d r = Cell_L0 * pos;
+                    Vector3d r = Cell * pos;
+                    //Vector3d r = Cell_L0 * pos;
                     aaa.x = r.x();
                     aaa.y = r.y();
                     aaa.z = r.z();
@@ -71,12 +73,12 @@ void Output(const int &n, const BasicData &data,
                 const Matrix3d &Cell,const string &filename)
 {
     FILE *fp = fopen(filename.c_str(), "w");
-    Matrix3d Box = Cell_L0 * (data.Box_Ln + 1.0);
-    //Matrix3d Box = Cell * (data.Box_Ln + 1.0);
+    //Matrix3d Box = Cell_L0 * (data.Box_Ln + 1.0);
+    Matrix3d Box = Cell * (data.Box_Ln + 1);
     fprintf(fp, "%d\n", n);
     fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.T, data.E);
     fprintf(fp, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-           Box(0, 0), Box(1, 0), Box(2, 0), Box(0, 1), Box(1, 1), Box(2, 1), Box(0, 2), Box(1, 2), Box(2, 2));
+         Box(0, 2), Box(1, 2), Box(2, 2), Box(0, 1), Box(1, 1), Box(2, 1), Box(0, 0), Box(1, 0), Box(2, 0));
     for(const auto &d : output)
     {
         fprintf(fp, " %4s  %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
