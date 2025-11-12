@@ -82,6 +82,7 @@ void build( const vector<Atom> &atoms,
 void calculate(int &n,
                const BasicData &data,
                const Matrix3d &Cell,
+               const Matrix3d &Cell_L0,
                const vector<Data> &datas,
                vector<Data> &output);
 

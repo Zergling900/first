@@ -42,7 +42,7 @@ int main()
 
     cout << "STEP 5: calculate\n";
     int n = 0;
-    calculate(n, data, Cell_L0, datas, output);
+    calculate(n, data, Cell, Cell_L0, datas, output);
 
     cout << "STEP 6: Output\n";
     Output(n, data, output, Cell_L0, Cell, data.data_file_name);
