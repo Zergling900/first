@@ -1,0 +1,24 @@
+//BCC
+
+First_Data                          /BasicData/BCC.W.3.0.md3
+Data                                /Data/BCC.W.3.0.md3
+Ut_file                             /Data/BCC.W.3.0.Ut.md3
+Kt_file                             /Data/BCC.W.3.0.Kt.md3
+
+//***************************************************************************
+
+//FCC
+
+First_Data                          /BasicData/FCC.Cu.2.0.md3
+Data                                /Data/FCC.Cu.2.0.md3
+Ut_file                             /Data/FCC.Cu.2.0.Ut.md3
+Kt_file                             /Data/FCC.Cu.2.0.Kt.md3
+
+//***************************************************************************
+
+//Diamond
+
+First_Data                          /BasicData/Diamond.C.2.0.md3
+Data                                /Data/Diamond.C.2.0.md3
+Ut_file                             /Data/Diamond.C.2.0.Ut.md3
+Kt_file                             /Data/Diamond.C.2.0.Kt.md3

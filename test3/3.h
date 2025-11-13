@@ -6,7 +6,6 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include <eigen3/Eigen/Dense>
 
 
 using namespace Eigen;
@@ -38,4 +37,7 @@ struct Data
     double dvx, dvy, dvz;               //acceleration
 };
 
-
+struct BasicData
+{
+    string BasicData_filename,Data_filename,Ut_file,Kt_file;
+};
