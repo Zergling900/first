@@ -4,11 +4,11 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include <eigen3/Eigen/Dense>
+//#include <eigen3/Eigen/Dense>
 
 #include "2.h"
 
-using namespace Eigen;
+//using namespace Eigen;
 using namespace std;
 //----------------------------------------------
 //main
@@ -36,9 +36,9 @@ int main()
     build(atoms, data1, datas);
 
     cout << "STEP 4: CellVector\n";
-    Matrix3d Cell_L0 = CellVector_L0(data);
-    Matrix3d Cell_A= CellVector_A(data);
-    Matrix3d Cell = CellVector_C(Cell_L0, Cell_A);
+    Matrix33 Cell_L0 = CellVector_L0(data);
+    Matrix33 Cell_A = CellVector_A(data);
+    Matrix33 Cell = CellVector_C(Cell_L0, Cell_A);
 
     cout << "STEP 5: calculate\n";
     int n = 0;

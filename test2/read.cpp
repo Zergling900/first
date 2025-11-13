@@ -4,13 +4,13 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include <eigen3/Eigen/Dense>
+//#include <eigen3/Eigen/Dense>
 
 #include "2.h"
 // #include "parameter.p1"
 //#include "parameter.p2"
 
-using namespace Eigen;
+//using namespace Eigen;
 using namespace std;
 
 
