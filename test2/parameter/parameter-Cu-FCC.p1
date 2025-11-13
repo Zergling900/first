@@ -1,9 +1,9 @@
-data_file_name         Data/BCC.W.3.0.md3
+data_file_name         Data/FCC.Cu.2.0.md3
 
 n                      0
 time                   0.0
 energy                 0.0
-Box_Ln                 3.0
+Box_Ln                 2.0
 Box_Lx                 0.0
 Box_Ly                 0.0
 Box_Lz                 0.0
@@ -21,14 +21,16 @@ Box_Lz                 0.0
 //angle(theta is y axis, phi is z axis)
 //can copy .cif data
 
-_cell_length_a   3.165
-_cell_length_b   3.165
-_cell_length_c   3.165
+_cell_length_a   3.615
+_cell_length_b   3.615
+_cell_length_c   3.615
 _cell_angle_alpha   90.00000000
 _cell_angle_beta   90.00000000
 _cell_angle_gamma   90.00000000
 
 // atom site （can copy .cif data）
 coordinates
-  W  W0  1  0.0  0.0  0.0  1
-  W  W1  1  0.5  0.5  0.5  1
+  Cu  Cu0  1  0.0  0.0  0.0  1
+  Cu  Cu1  1  0.0  0.5  0.5  1
+  Cu  Cu0  1  0.5  0.5  0.0  1
+  Cu  Cu1  1  0.5  0.0  0.5  1

@@ -14,7 +14,7 @@ using namespace std;
 
 // ----------------------------
 
-struct firstdata
+struct FirstData
 {
     int n;                              // number of atoms
     double T;                           // unknown
@@ -25,4 +25,17 @@ struct firstdata
     double vx, vy, vz;                  //velocity
     double dvx, dvy, dvz;               //acceleration
 };
+
+struct Data
+{
+    int n;                              // number of atoms
+    double T;                           // unknown
+    double E;                           // energy
+    double Box_Ln, Box_Lx,Box_Ly,Box_Lz;// box size
+    string name;
+    double x, y, z;                     //position
+    double vx, vy, vz;                  //velocity
+    double dvx, dvy, dvz;               //acceleration
+};
+
 

@@ -1,0 +1,40 @@
+data_file_name         Data/Diamond.C.2.0.md3
+
+n                      0
+time                   0.0
+energy                 0.0
+Box_Ln                 2.0
+Box_Lx                 0.0
+Box_Ly                 0.0
+Box_Lz                 0.0
+
+//basic(or not) lattice constant
+//ax                  0.0 0.0 0.0
+//ay                  0.0 0.0 0.0
+//az                  0.0 0.0 0.0
+
+
+
+//unit cell
+
+//length
+//angle(theta is y axis, phi is z axis)
+//can copy .cif data
+
+_cell_length_a   3.567
+_cell_length_b   3.567
+_cell_length_c   3.567
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+
+// atom site （can copy .cif data）
+coordinates
+  C  C0  1  0.00000000  0.00000000  0.00000000  1
+  C  C1  1  0.25000000  0.25000000  0.25000000  1
+  C  C0  1  0.00000000  0.50000000  0.50000000  1
+  C  C1  1  0.25000000  0.75000000  0.75000000  1
+  C  C0  1  0.50000000  0.00000000  0.50000000  1
+  C  C1  1  0.75000000  0.25000000  0.75000000  1
+  C  C0  1  0.50000000  0.50000000  0.00000000  1
+  C  C1  1  0.75000000  0.75000000  0.25000000  1
