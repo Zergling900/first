@@ -1,54 +1,60 @@
 #include <iostream>
-#include <random>
+//#include <random>
 #include <sstream>
 #include <string>
-#include <cmath>
-#include <fstream>
+//#include <cmath>
+//#include <fstream>
 #include <vector>
-#include <iomanip>
+//#include <iomanip>
 
 #include "3.h"
 
 using namespace std;
 
 //---------------------------------------------------------------------------
-void readF(FileName &filename)
-{
-    ifstream fin("FileName.txt");
-    if (!fin) {
-        cerr << "con't open the file: " << "FileName.txt" << endl;
-        return;
-    }
-
-    string line, key, name;
-
-    while (getline(fin, line)) {
-        if (line.empty() || 
-            line[0] == '#' || 
-            (line.size() > 1 && line[0] == '/' && line[1] == '/'))
-            continue; 
-
-        stringstream ss(line);
-        ss >> key >> name;
-
-            if (key == "BasicData_file") filename.BasicData_filename = name;//string(key) otput file name
-            else if (key == "Data_file") filename.Data_filename = name;
-            else if (key == "Ut_file") filename.Ut_file = name;
-            else if (key == "Kt_file") filename.Kt_file = name;
-            //else if (key == "other1") filename.other1 = name;
-            //else if (key == "other2") filename.other2 = name;
-    }
-};
-
-void read0(const FirstData &data0,const FileName &filename, Data &data)
+void read0(const FileName &filename, Data &data, std::vector<Data> &atoms)
 {
     ifstream fin(filename.BasicData_filename);
     if (!fin) {
-        cerr << "con't open the file: " << filename.BasicData_filename << endl;
+        std::cerr << "can't open file: " << filename.BasicData_filename << std::endl;
         return;
     }
 
-    string line, key;
-    double value;
+    // 1. n
+    fin >> data.n;
+    string dummy;
+    getline(fin, dummy);  //skip line
 
+    // 2. time & Energy
+    string tmp;
+    fin >> tmp;        // "time="
+    fin >> data.T;   // T
+    fin >> tmp;        // "(fs)"
+    fin >> tmp;        // "Energy="
+    fin >> data.E;   // E
+    getline(fin, dummy);  //skip line
+
+    // 3. BOX
+    fin >> tmp; // "BOX"
+    fin >> data.Box.a00 >> data.Box.a10 >> data.Box.a20
+        >> data.Box.a01 >> data.Box.a11 >> data.Box.a21
+        >> data.Box.a02 >> data.Box.a12 >> data.Box.a22;
+
+    // 4. atoms
+    atoms.clear();
+    atoms.reserve(data.n);
+
+    for (int i = 0; i < data.n - 1; ++i) {
+        Data d;
+        fin >> d.name
+            >> d.x  >> d.y  >> d.z
+            >> d.vx >> d.vy >> d.vz
+            >> d.dvx >> d.dvy >> d.dvz;
+        atoms.push_back(d);
+    }
+}
+
+void read1()
+{
+    
 }
