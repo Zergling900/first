@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <random>
+#include <string>
+#include <sstream>
 #include <cmath>
 #include <fstream>
 #include <vector>
@@ -42,4 +44,4 @@ struct FileName
 };
 
 
-void readF(FileData &filename);
+void readF(FileName &filename);
