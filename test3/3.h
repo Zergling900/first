@@ -71,7 +71,13 @@ struct Data
 struct FileName
 {
     string BasicData_filename,Data_filename,Ut_file,Kt_file;
+    string parameter;
 };
 
+struct parameter1
+{
+    double dt;
+    int steps,steps_space;
+};
 
 void readF(FileName &filename);
