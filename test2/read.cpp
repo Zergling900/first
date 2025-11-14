@@ -1,5 +1,7 @@
 #include <iostream>
 #include <random>
+#include <sstream>
+#include <string>
 #include <cmath>
 #include <fstream>
 #include <vector>
@@ -12,9 +14,6 @@
 
 //using namespace Eigen;
 using namespace std;
-
-
-#include <iostream>
 
 void read1(BasicData &data, vector<Atom> &atoms)
 {
