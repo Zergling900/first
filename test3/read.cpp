@@ -10,7 +10,7 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-void read(FileData &filename)
+void readF(FileData &filename)
 {
     ifstream fin("FileName.txt");
     if (!fin) {
@@ -34,4 +34,4 @@ void read(FileData &filename)
             else if (key == "Ut_file") filename.Ut_file = name;
             else if (key == "Kt_file") filename.Kt_file = name;
     }
-}
+};

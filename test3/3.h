@@ -7,8 +7,7 @@
 #include <vector>
 #include <iomanip>
 
-
-using namespace Eigen;
+//using namespace Eigen;
 using namespace std;
 
 // ----------------------------
@@ -37,7 +36,10 @@ struct Data
     double dvx, dvy, dvz;               //acceleration
 };
 
-struct BasicData
+struct FileName
 {
     string BasicData_filename,Data_filename,Ut_file,Kt_file;
 };
+
+
+void readF(FileData &filename);
