@@ -77,6 +77,10 @@ void read1(parameter1 &p1)
         {
             p1.steps_space = static_cast<int>(value);
         }
+        else if (key == "steps_space")
+        {
+            p1.steps_space = static_cast<int>(value);
+        }
     }
 
     fin.close();
