@@ -43,40 +43,62 @@ struct Matrix31
     Matrix31(double m00, double m01, double m02)
         : a00(m00), a10(m01), a20(m02) {}
 };
-//-----------------------------
-struct FirstData
-{
-    int n;                              // number of atoms
-    double T;                           // unknown
-    double E;                           // energy
-    double Box_Ln, Box_Lx,Box_Ly,Box_Lz;// box size
-    string name;
-    double x, y, z;                     //position
-    double vx, vy, vz;                  //velocity
-    double dvx, dvy, dvz;               //acceleration
-};
 
+//---------------------------------------------------------------------------------------------------------
+//Matrix calculate
+//33 * 33
+Matrix33 operator*(const Matrix33 &A,const Matrix33 &B);
+//33 +33
+Matrix33 operator+(const Matrix33 &A,const Matrix33 &B);
+//33 -33
+Matrix33 operator-(const Matrix33 &A,const Matrix33 &B);
+//33 *31
+Matrix31 operator*(const Matrix33 &A,const Matrix31 &B);
+//31 +31
+Matrix31 operator+(const Matrix31 &A,const Matrix31 &B);
+//31 - 31
+Matrix31 operator-(const Matrix31 &A,const Matrix31 &B);
+//k*31
+Matrix31 operator*(double k, const Matrix31 &v);
+//31*k
+Matrix31 operator*(const Matrix31 &v, double k);
+//k*33
+Matrix33 operator*(double k, const Matrix33 &M);
+//33*k
+Matrix33 operator*(const Matrix33 &M, double k);
+//---------------------------------------------------------------------------------------------------------
+
+// struct AtomPotential
+// {
+    
+// };
+struct Atom
+{
+    string name;
+    Matrix31 r;                     //position
+    Matrix31 v;                  //velocity
+    Matrix31 dv;
+    Matrix31 p;                  //momentum
+};
 struct Data
 {
     int n;                              // number of atoms
-    double T;                           // unknown
-    double E;                           // energy
-    Matrix33 Box;// box size
-    string name;
-    double x, y, z;                     //position
-    double vx, vy, vz;                  //velocity
-    double dvx, dvy, dvz;               //acceleration
+    double T,E;                           // unknown
+    double U_all,K_all;                           // energy
+    Matrix31 F_all;
+    Matrix33 Box;
+    std::vector<Atom> atoms;                       //momentum
 };
 
 struct FileName
 {
     string BasicData_filename,Data_filename,Ut_file,Kt_file;
-    string parameter;
+    string parameter_filename;
 };
 
 struct parameter1
 {
-    double dt;
+    double dt,epsilon,kb,sigma,m;
     int steps,steps_space;
 };
 

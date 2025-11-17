@@ -12,51 +12,89 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-void read0(const FileName &filename, Data &data, std::vector<Data> &atoms)
+//BasicData_filename,Data_filename,Ut_file,Kt_file
+void readF(const std::string &configFile, FileName &fn)
 {
-    ifstream fin(filename.BasicData_filename);
+    std::ifstream fin(configFile);
     if (!fin)
     {
-        std::cerr << "can't open file: " << filename.BasicData_filename << std::endl;
+        std::cerr << "can't open file: " << configFile << std::endl;
         return;
     }
 
-    // 1. n
+    string key, x;
+    while(fin >> key >> x)
+    {
+        if(key == "parameter")
+        {
+            fn.parameter_filename = x;
+        }
+        else if(key == "BasicData_filename")
+        {
+            fn.BasicData_filename = x;
+        }
+        else if(key == "Data_filename")
+        {
+            fn.Data_filename = x;
+        }
+        else if(key == "Ut_file")
+        {
+            fn.Ut_file = x;
+        }
+        else if(key == "Kt_file")
+        {
+            fn.Kt_file = x;
+        }
+    }
+
+}
+
+void read0(const FileName &filename, Data &data)
+{
+    ifstream fin(filename.BasicData_filename);
+    if (!fin) {
+        cerr << "Can't open file.\n";
+        return;
+    }
+
+    // 1. read n
     fin >> data.n;
     string dummy;
-    getline(fin, dummy); // skip line
+    getline(fin, dummy);
 
-    // 2. time & Energy
+    // 2. read time & energy
     string tmp;
-    fin >> tmp;          // "time="
-    fin >> data.T;       // T
-    fin >> tmp;          // "(fs)"
-    fin >> tmp;          // "Energy="
-    fin >> data.E;       // E
-    getline(fin, dummy); // skip line
+    fin >> tmp >> data.T >> tmp >> tmp >> data.E;
+    getline(fin, dummy);
 
-    // 3. BOX
-    fin >> tmp; // "BOX"
-    fin >> data.Box.a00 >> data.Box.a10 >> data.Box.a20 >> data.Box.a01 >> data.Box.a11 >> data.Box.a21 >> data.Box.a02 >> data.Box.a12 >> data.Box.a22;
+    // 3. read Box
+    fin >> tmp;
+    fin >> data.Box.a00 >> data.Box.a01 >> data.Box.a02
+        >> data.Box.a10 >> data.Box.a11 >> data.Box.a12
+        >> data.Box.a20 >> data.Box.a21 >> data.Box.a22;
 
-    // 4. atoms
-    atoms.clear();
-    atoms.reserve(data.n);
+    // 4. read atoms
+    data.atoms.resize(data.n);
 
-    for (int i = 0; i < data.n - 1; ++i)
+    for (int i = 0; i < data.n; ++i)
     {
-        Data d;
-        fin >> d.name >> d.x >> d.y >> d.z >> d.vx >> d.vy >> d.vz >> d.dvx >> d.dvy >> d.dvz;
-        atoms.push_back(d);
+        Atom &a = data.atoms[i];
+        fin >> a.name
+            >> a.r.a00 >> a.r.a10 >> a.r.a20
+            >> a.v.a00 >> a.v.a10 >> a.v.a20
+            >> a.dv.a00 >> a.dv.a10 >> a.dv.a20;
+
+        // p
+        a.p = Matrix31(0,0,0);
     }
 }
 
-void read1(parameter1 &p1)
+void read1(const FileName &filename, parameter1 &p1)
 {
-    ifstream fin("parameter.p1");
+    ifstream fin(filename.parameter_filename);
     if (!fin)
     {
-        std::cerr << "can't open file: " << "parameter.p1" << std::endl;
+        std::cerr << "can't open file: " << filename.parameter_filename << std::endl;
         return;
     }
 
@@ -92,6 +130,10 @@ void read1(parameter1 &p1)
         else if (key == "sigma")
         {
             p1.sigma = value;
+        }
+        else if (key == "mass")
+        {
+            p1.m = value;
         }
     }
 

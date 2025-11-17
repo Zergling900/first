@@ -1,4 +1,4 @@
-dt                      1.000000000e-03
+dt                      1.000000000e-03//fs
 steps                   1.000000000e+04
 steps_space             1.000000000e+02
 
@@ -7,4 +7,5 @@ kb                      1.38064852e-23
 
 //LJ(Ar)
 epsilon                 120 //epsilon/kb
-sigma                   3.4
+sigma                   3.4//amu
+mass                    39.948
