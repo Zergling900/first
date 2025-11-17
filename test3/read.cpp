@@ -81,6 +81,18 @@ void read1(parameter1 &p1)
         {
             p1.steps_space = static_cast<int>(value);
         }
+        else if (key == "kb")
+        {
+            p1.kb = value;
+        }
+        else if (key == "epsilon")
+        {
+            p1.epsilon = value;
+        }
+        else if (key == "sigma")
+        {
+            p1.sigma = value;
+        }
     }
 
     fin.close();

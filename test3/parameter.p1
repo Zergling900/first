@@ -2,9 +2,9 @@ dt                      1.000000000e-03
 steps                   1.000000000e+04
 steps_space             1.000000000e+02
 
-T
-kb
+T                       300
+kb                      1.38064852e-23
 
 //LJ(Ar)
-epsilon                 
-sigma
+epsilon                 120 //epsilon/kb
+sigma                   3.4
