@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 // #include <cmath>
-// #include <fstream>
+//#include <fstream>
 #include <vector>
 // #include <iomanip>
 
@@ -37,13 +37,9 @@ void readF(const std::string &configFile, FileName &fn)
         {
             fn.Data_filename = x;
         }
-        else if(key == "Ut_file")
+        else if(key == "Et_file")
         {
-            fn.Ut_file = x;
-        }
-        else if(key == "Kt_file")
-        {
-            fn.Kt_file = x;
+            fn.Et_file = x;
         }
     }
 
@@ -98,11 +94,15 @@ void read1(const FileName &filename, parameter1 &p1)
         return;
     }
 
-    string key;
+    string key,line;
     double value;
     int i;
-    while (fin >> key >> value)
+    while (getline(fin, line))
     {
+        stringstream ss(line);
+
+        ss >> key >> value;
+
         if (key == "dt")
         {
             p1.dt = value;
@@ -115,9 +115,9 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             p1.steps_space = static_cast<int>(value);
         }
-        else if (key == "steps_space")
+        else if (key == "T")
         {
-            p1.steps_space = static_cast<int>(value);
+            p1.T = value;
         }
         else if (key == "kb")
         {

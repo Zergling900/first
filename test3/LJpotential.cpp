@@ -16,58 +16,99 @@ using namespace std;
 // ----------------------------
 
 // LJ potential U = 4*epsilon*(sigma^12/r^12 - sigma^6/r^6)
-void LJ_potential(Data &data, const parameter1 &p1, vector<double> &U_atom,
-                  Matrix31 &F)
+void LJ_potential(Data &data, const parameter1 &p1, vector<double> &U_atom)
+
 {
     int i, j;
-    int N = data.n;
+    //int N = data.n;
     data.U_all = 0.0;
     data.K_all = 0.0;
     data.F_all = Matrix31(0.0, 0.0, 0.0);
+    data.f_all = 0.0;
     double epsilon = p1.epsilon;
     double sigma = p1.sigma;
+    double sigma2 = sigma * sigma;
     double m = p1.m;
 
+    U_atom.assign(data.n, 0.0);
 
-    U_atom.assign(N, 0.0);
-    data.U_all = 0.0;
-    F = Matrix31(0.0, 0.0, 0.0);
+    Matrix31 F = Matrix31(0.0, 0.0, 0.0);
+
+    //PBC,but this just for positive crystal (test)
+    double Lx = sqrt(data.Box.a00 * data.Box.a00 + data.Box.a01 * data.Box.a01 + data.Box.a02 * data.Box.a02);
+    double Ly = sqrt(data.Box.a10 * data.Box.a10 + data.Box.a11 * data.Box.a11 + data.Box.a12 * data.Box.a12);
+    double Lz = sqrt(data.Box.a20 * data.Box.a20 + data.Box.a21 * data.Box.a21 + data.Box.a22 * data.Box.a22);
+    double Lxh = Lx / 2.0;
+    double Lyh = Ly / 2.0;
+    double Lzh = Lz / 2.0;
+
+    double rc2 = 2.5 * 2.5 * sigma2;//rc^2 , p30,  2.5~3.5 * sigma
 
     for (i = 0; i < data.n; i++)
     {
-        const Atom &ai = data.atoms[i];
         data.atoms[i].dv = Matrix31(0.0, 0.0, 0.0);
+    };
+    
+    for (i = 0; i < data.n; i++)
+    {
+        const Atom &ai = data.atoms[i];
 
         for (j = i + 1; j < data.n; j++)
         {
             const Atom &aj = data.atoms[j];
-            
+
             Matrix31 dr = aj.r - ai.r;
             // double dx = aj.r.a00 - ai.r.a00;// after translate to matrix
             // double dy = aj.r.a10 - ai.r.a10;
             // double dz = aj.r.a20 - ai.r.a20;
 
-            double r = sqrt(dr.a00 * dr.a00 + dr.a10 * dr.a10 + dr.a20 * dr.a20);
+            //if < or > L/2 , translate to -L/2
+            //------------------------------------------------------------------ 
+            if (dr.a00 >  Lxh) dr.a00 -= Lx;
+            if (dr.a00 < -Lxh) dr.a00 += Lx;
 
-            // fix \\
+            if (dr.a10 >  Lyh) dr.a10 -= Ly;
+            if (dr.a10 < -Lyh) dr.a10 += Ly;
 
-            // double r2 = r * r;
-            // double r6 = r2 * r2 * r2;
-            // double r12 = r6 * r6;
+            if (dr.a20 >  Lzh) dr.a20 -= Lz;
+            if (dr.a20 < -Lzh) dr.a20 += Lz;
 
-            // double uij = 4.0 * epsilon * (pow(sigma / r, 12) - pow(sigma / r, 6));//pow(a,b) = a^b
-            // data.U_all += uij;
+            //------------------------------------------------------------------
+
+            // this r is |dr|!
+            //double r = sqrt(dr.a00 * dr.a00 + dr.a10 * dr.a10 + dr.a20 * dr.a20);
+            double r2 = dr.a00 * dr.a00 + dr.a10 * dr.a10 + dr.a20 * dr.a20;
+            if (r2 == 0.0)
+            {
+                r2 = 1e-14;
+            }
+
+            if (r2 > rc2) continue;// if r > rc, skip
+
+            double sr2 = sigma2 / r2;// sigma^2/r^2
+            double sr6 = sr2 * sr2 * sr2;
+            double sr12 = sr6 * sr6;
+
+            double uij = 4 * epsilon * (sr12 - sr6);
+            data.U_all += uij;
 
             U_atom[i] += 0.5 * uij;
             U_atom[j] += 0.5 * uij;
-            //dU/dr
-            F = 24 * epsilon *(2* pow(sigma / r, 12) - pow(sigma / r, 6)) * (dr * (1/(r*r)));\
+
+            // dU/dr,this r is |dr|,so need /r^2
+            // F is 3*1 vector
+            F = (-48.0) * epsilon * (sr12 - 0.5 * sr6) / (r2) * dr;
 
             data.F_all = F + data.F_all;
-            //F = coeff * dr + F;
+            //if slow, can delete this part,or change to f^2
 
-            data.atoms[i].dv = F * (1/m) + data.atoms[i].dv;
-            data.atoms[j].dv = -1 * F * (1/m) + data.atoms[j].dv;
+            data.atoms[i].dv = F * (1.0 / m) + data.atoms[i].dv;
+            data.atoms[j].dv = -1 * F * (1.0 / m) + data.atoms[j].dv;
         };
     };
+
+    data.f_all = sqrt(data.F_all.a00 * data.F_all.a00
+                            + data.F_all.a10 * data.F_all.a10
+                            + data.F_all.a20 * data.F_all.a20) 
+                            + data.f_all;
 }

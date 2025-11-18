@@ -84,7 +84,7 @@ struct Data
 {
     int n;                              // number of atoms
     double T,E;                           // unknown
-    double U_all,K_all;                           // energy
+    double U_all,K_all,f_all;                           // energy
     Matrix31 F_all;
     Matrix33 Box;
     std::vector<Atom> atoms;                       //momentum
@@ -92,14 +92,14 @@ struct Data
 
 struct FileName
 {
-    string BasicData_filename,Data_filename,Ut_file,Kt_file;
+    string BasicData_filename,Data_filename,Et_file;
     string parameter_filename;
 };
 
 struct parameter1
 {
-    double dt,epsilon,kb,sigma,m;
-    int steps,steps_space;
+    double dt, epsilon, kb, T, sigma, m;
+    int steps, steps_space;
 };
 
 void readF(FileName &filename);
