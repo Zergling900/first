@@ -41,12 +41,6 @@ void RandomV0(Data &Data0, const parameter1 &p1)
         Data0.atoms[i].p = Data0.atoms[i].p - p_cm;
 
     }
-
-        for (int i = 0; i < Data0.n; i++)
-    {
-        Data0.atoms[i].v = Data0.atoms[i].p * (1.0/p1.m);
-
-    }
 }
 // ----------------------------
 

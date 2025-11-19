@@ -75,10 +75,9 @@ Matrix33 operator*(const Matrix33 &M, double k);
 struct Atom
 {
     string name;
-    Matrix31 r;                     //position
-    Matrix31 v;                  //velocity
-    Matrix31 dv;
-    Matrix31 p;                  //momentum
+    Matrix31 r;                     //position                    //velocity
+    Matrix31 p;                     //momentum
+    Matrix31 f;                     //force
 };
 struct Data
 {
@@ -101,5 +100,3 @@ struct parameter1
     double dt, epsilon, kb, T, sigma, m;
     int steps, steps_space;
 };
-
-void readF(FileName &filename);

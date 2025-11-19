@@ -16,21 +16,20 @@ using namespace std;
 // ----------------------------
 
 // LJ potential U = 4*epsilon*(sigma^12/r^12 - sigma^6/r^6)
-void LJ_potential(Data &data, const parameter1 &p1, vector<double> &U_atom)
+void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom)
 
 {
     int i, j;
     //int N = data.n;
-    data.U_all = 0.0;
-    data.K_all = 0.0;
+    //data.U_all = 0.0;
+    //data.K_all = 0.0;
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     data.f_all = 0.0;
-    double epsilon = p1.epsilon;
-    double sigma = p1.sigma;
+    double epsilon = pr1.epsilon;
+    double sigma = pr1.sigma;
     double sigma2 = sigma * sigma;
-    double m = p1.m;
 
-    U_atom.assign(data.n, 0.0);
+    U_atom.assign(data.n, 0.0);//initialize
 
     Matrix31 F = Matrix31(0.0, 0.0, 0.0);
 
@@ -46,7 +45,7 @@ void LJ_potential(Data &data, const parameter1 &p1, vector<double> &U_atom)
 
     for (i = 0; i < data.n; i++)
     {
-        data.atoms[i].dv = Matrix31(0.0, 0.0, 0.0);
+        data.atoms[i].f = Matrix31(0.0, 0.0, 0.0);
     };
     
     for (i = 0; i < data.n; i++)
@@ -102,13 +101,8 @@ void LJ_potential(Data &data, const parameter1 &p1, vector<double> &U_atom)
             data.F_all = F + data.F_all;
             //if slow, can delete this part,or change to f^2
 
-            data.atoms[i].dv = F * (1.0 / m) + data.atoms[i].dv;
-            data.atoms[j].dv = -1 * F * (1.0 / m) + data.atoms[j].dv;
+            data.atoms[i].f = data.atoms[i].f + F;
+            data.atoms[j].f = data.atoms[j].f - F;
         };
     };
-
-    data.f_all = sqrt(data.F_all.a00 * data.F_all.a00
-                            + data.F_all.a10 * data.F_all.a10
-                            + data.F_all.a20 * data.F_all.a20) 
-                            + data.f_all;
 }

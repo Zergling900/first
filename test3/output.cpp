@@ -39,8 +39,10 @@ void InitEnergyFile(const FileName &filename)
     fclose(fp);
 }
 
-void Output(const Data &data, const FileName &filename)
+void Output(const Data &data, const FileName &filename, const parameter1 &p1)
 {
+    double m1 = 1.0 / p1.m ;
+
     FILE *fp1 = fopen(filename.Data_filename.c_str(), "a+");
     //n
     fprintf(fp1, "%d\n", data.n);
@@ -54,12 +56,13 @@ void Output(const Data &data, const FileName &filename)
     //atoms
     for (int i = 0; i < data.n; i++)
     {
-        const Atom &d = data.atoms[i];
+        string name = data.atoms[i].name;
+        Matrix31 r = data.atoms[i].r;
+        Matrix31 v = data.atoms[i].p * m1;
+        Matrix31 dv = data.atoms[i].f * m1;
+        
         fprintf(fp1, " %4s  %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-                d.name.c_str(),
-                d.r.a00, d.r.a10, d.r.a20,
-                d.v.a00, d.v.a10, d.v.a20,
-                d.dv.a00, d.dv.a10, d.dv.a20);
+                name.c_str(), r.a00, r.a10, r.a20, v.a00, v.a10, v.a20, dv.a00, dv.a10, dv.a20);
     }
     fclose(fp1);
     //--------------------------------------------------------------------------------------

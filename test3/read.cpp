@@ -77,11 +77,8 @@ void read0(const FileName &filename, Data &data)
         Atom &a = data.atoms[i];
         fin >> a.name
             >> a.r.a00 >> a.r.a10 >> a.r.a20
-            >> a.v.a00 >> a.v.a10 >> a.v.a20
-            >> a.dv.a00 >> a.dv.a10 >> a.dv.a20;
-
-        // p
-        a.p = Matrix31(0,0,0);
+            >> a.p.a00 >> a.p.a10 >> a.p.a20
+            >> a.f.a00 >> a.f.a10 >> a.f.a20;
     }
 }
 
