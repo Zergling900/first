@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 // #include <cmath>
-//#include <fstream>
+// #include <fstream>
 #include <vector>
 // #include <iomanip>
 
@@ -12,7 +12,7 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-//BasicData_filename,Data_filename,Ut_file,Kt_file
+// BasicData_filename,Data_filename,Ut_file,Kt_file
 void readF(const std::string &configFile, FileName &fn)
 {
     std::ifstream fin(configFile);
@@ -22,34 +22,53 @@ void readF(const std::string &configFile, FileName &fn)
         return;
     }
 
-    string key, x;
-    while(fin >> key >> x)
+    string key, x, line;
+
+    while (getline(fin, line))
     {
-        if(key == "parameter")
+        if (line.empty() ||
+            line[0] == '#' ||
+            (line.size() > 1 && line[0] == '/' && line[1] == '/'))
+            continue;
+
+        std::stringstream ss(line);
+        ss >> key >> x;
+        // parameter                           parameter.p1
+        // BCC
+
+        // First_Data_file                          /BasicData/BCC.md3
+        // Data_file                                /Data/BCC.md3
+        // Et_file                             /Data/BCC.Et.md3
+        if (key == "")
+            continue; // skip space
+        if (x == "")
+            continue; // 
+
+        if (key == "parameter")
         {
             fn.parameter_filename = x;
         }
-        else if(key == "BasicData_filename")
+        else if (key == "First_Data_file")
         {
             fn.BasicData_filename = x;
         }
-        else if(key == "Data_filename")
+        else if (key == "Data_file")
         {
             fn.Data_filename = x;
         }
-        else if(key == "Et_file")
+        else if (key == "Et_file")
         {
             fn.Et_file = x;
         }
     }
-
 }
 
 void read0(const FileName &filename, Data &data)
 {
     ifstream fin(filename.BasicData_filename);
-    if (!fin) {
-        cerr << "Can't open file.\n";
+    if (!fin)
+    {
+        cerr << "Can't open file: " << filename.BasicData_filename << endl;
         return;
     }
 
@@ -65,9 +84,7 @@ void read0(const FileName &filename, Data &data)
 
     // 3. read Box
     fin >> tmp;
-    fin >> data.Box.a00 >> data.Box.a01 >> data.Box.a02
-        >> data.Box.a10 >> data.Box.a11 >> data.Box.a12
-        >> data.Box.a20 >> data.Box.a21 >> data.Box.a22;
+    fin >> data.Box.a00 >> data.Box.a01 >> data.Box.a02 >> data.Box.a10 >> data.Box.a11 >> data.Box.a12 >> data.Box.a20 >> data.Box.a21 >> data.Box.a22;
 
     // 4. read atoms
     data.atoms.resize(data.n);
@@ -75,10 +92,7 @@ void read0(const FileName &filename, Data &data)
     for (int i = 0; i < data.n; ++i)
     {
         Atom &a = data.atoms[i];
-        fin >> a.name
-            >> a.r.a00 >> a.r.a10 >> a.r.a20
-            >> a.p.a00 >> a.p.a10 >> a.p.a20
-            >> a.f.a00 >> a.f.a10 >> a.f.a20;
+        fin >> a.name >> a.r.a00 >> a.r.a10 >> a.r.a20 >> a.p.a00 >> a.p.a10 >> a.p.a20 >> a.f.a00 >> a.f.a10 >> a.f.a20;
     }
 }
 
@@ -91,7 +105,7 @@ void read1(const FileName &filename, parameter1 &p1)
         return;
     }
 
-    string key,line;
+    string key, line;
     double value;
     int i;
     while (getline(fin, line))

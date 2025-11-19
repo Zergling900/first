@@ -1,22 +1,22 @@
 parameter                           parameter.p1
 //BCC
 
-First_Data                          /BasicData/BCC.W.3.0.md3
-Data                                /Data/BCC.W.3.0.md3
-Et_file                             /Data/BCC.W.3.0.Et.md3
+First_Data_file                             BasicData/BCC.md3
+Data_file                                   Data/BCC.md3
+Et_file                                     Data/BCC.Et.md3
 
 //***************************************************************************
 
 //FCC
 
-//First_Data                          /BasicData/FCC.Cu.2.0.md3
-//Data                                /Data/FCC.Cu.2.0.md3
-//Et_file                             /Data/FCC.Cu.2.0.Et.md3
+//First_Data_file                           BasicData/FCC.md3
+//Data_file                                 Data/FCC.md3
+//Et_file                                   Data/FCC.Et.md3
 
 //***************************************************************************
 
 //Diamond
 
-//First_Data                          /BasicData/Diamond.C.2.0.md3
-//Data                                /Data/Diamond.C.2.0.md3
-//Et_file                             /Data/Diamond.C.2.0.Et.md3
+//First_Data_file                           BasicData/Diamond.md3
+//Data_file                                 Data/Diamond.md3
+//Et_file                                   Data/Diamond.Et.md3

@@ -3,13 +3,14 @@
 #include <vector>
 
 #include "3.h"
+#include "void.h"
 
 using namespace std;
 
 // ----------------------------
 // time
 // ----------------------------
-void evolution(const parameter1 &pr1, Data &Data0)
+void evolution(const parameter1 &pr1, Data &Data0,vector<double> &U_atom)
 {
     int N = Data0.n;
     double dt = pr1.dt;
@@ -21,7 +22,7 @@ void evolution(const parameter1 &pr1, Data &Data0)
     double sigma = pr1.sigma;
     double steps = pr1.steps;
 
-    vector<double> U_atom(N);
+    //vector<double> U_atom(N);
 
     Matrix31 r0 = Matrix31(0.0, 0.0, 0.0);
     Matrix31 p0 = Matrix31(0.0, 0.0, 0.0);
@@ -50,13 +51,13 @@ void evolution(const parameter1 &pr1, Data &Data0)
         if (r2.a00 < 0.0)
             r2.a00 = r2.a00 + Data0.Box.a00;
         if (r2.a10 > Data0.Box.a11)
-            r2.a10 = r2.a10 - Data0.Box.a10;
+            r2.a10 = r2.a10 - Data0.Box.a11;
         if (r2.a10 < 0.0)
-            r2.a10 = r2.a10 + Data0.Box.a10;
+            r2.a10 = r2.a10 + Data0.Box.a11;
         if (r2.a20 > Data0.Box.a22)
-            r2.a20 = r2.a20 - Data0.Box.a20;
+            r2.a20 = r2.a20 - Data0.Box.a22;
         if (r2.a20 < 0.0)
-            r2.a20 = r2.a20 + Data0.Box.a20;
+            r2.a20 = r2.a20 + Data0.Box.a22;
 
         Data0.atoms[i].r = r2;
         Data0.atoms[i].p = p1;

@@ -4,7 +4,7 @@
 #include <vector>
 #include <iomanip>
 
-#include "2.h"
+#include "3.h"
 
 //33 * 33
 Matrix33 operator*(const Matrix33 &A,const Matrix33 &B)
@@ -58,7 +58,7 @@ Matrix31 operator+(const Matrix31 &A,const Matrix31 &B)
 Matrix31 operator-(const Matrix31 &A,const Matrix31 &B)
 {
     return Matrix31(
-        A.a00 - B.a00, A.a20 - B.a20, A.a20 - B.a20
+        A.a00 - B.a00, A.a10 - B.a10, A.a20 - B.a20
     );
 }
 //---------------------------------------------------------------------------------------------------------------

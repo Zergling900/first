@@ -34,12 +34,12 @@ void InitEnergyFile(const FileName &filename)
         printf("Cannot open Et file!\n");
         return;
     }
-    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s\n",
-            "time", "n", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
+    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s %16s\n",
+            "time", "n", "E", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
     fclose(fp);
 }
 
-void Output(const Data &data, const FileName &filename, const parameter1 &p1)
+void OutputData(const Data &data, const FileName &filename, const parameter1 &p1)
 {
     double m1 = 1.0 / p1.m ;
 
@@ -66,8 +66,12 @@ void Output(const Data &data, const FileName &filename, const parameter1 &p1)
     }
     fclose(fp1);
     //--------------------------------------------------------------------------------------
+}
+
+void OutputEnergy(const Data &data, const FileName &filename, const parameter1 &p1)
+{
     FILE *fp2 = fopen(filename.Et_file.c_str(), "a+");
-    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-             data.T,data.n,data.U_all,data.K_all,data.F_all.a00,data.F_all.a10,data.F_all.a20);
+    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
+             data.T,data.n,data.E, data.U_all,data.K_all,data.F_all.a00,data.F_all.a10,data.F_all.a20);
     fclose(fp2);
 };
