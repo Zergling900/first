@@ -2,8 +2,8 @@ parameter                           parameter.p1
 //BCC
 
 First_Data_file                             BasicData/BCC.md3
-Data_file                                   Data/BCC.md3
-Et_file                                     Data/BCC.Et.md3
+Data_file                                   Data/BCC.00.md3
+Et_file                                     Data/BCC.Et.00.md3
 
 //***************************************************************************
 

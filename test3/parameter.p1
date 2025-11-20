@@ -1,6 +1,6 @@
 dt                      1.000000000e-03         //fs
-steps                   1.000000000e+06
-steps_space             5.000000000e+02
+steps                   1.000000000e+05
+steps_space             1.000000000e+02
 
 T                       300
 kb                      8.6173332622e-05        //Å + eV + amu + fs
