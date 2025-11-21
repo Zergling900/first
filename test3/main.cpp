@@ -11,7 +11,7 @@ int main()
     parameter1 pr1;
     vector<double> U_atom;
 
-    //read basic data*******************************************
+    // read basic data*******************************************
     cout << "STEP 1: readF\n";
 
     readF("FileName.txt", filename);
@@ -26,23 +26,27 @@ int main()
     InitEnergyFile(filename);
     //***********************************************************
 
-    //initial***************************************************
+    // initial***************************************************
     cout << "STEP 5: RandomV0\n";
     RandomV0(data, pr1);
 
     cout << "STEP 6: First_LJ_potential\n";
     LJ_potential(data, pr1, U_atom);
-    //OutputData(data, filename,pr1);
+    energy(data, pr1, U_atom);
+    
+    OutputData(data, filename, pr1);
+    OutputEnergy(data, filename, pr1);
+    // OutputData(data, filename,pr1);
     //***********************************************************
 
-    //evolution*************************************************
-    cout << "STEP 6: evolution\n";
-    for(int i = 0; i < pr1.steps; i++)
+    // evolution*************************************************
+    cout << "STEP 7: evolution\n";
+    for (int i = 0; i < pr1.steps; i++)
     {
         evolution(pr1, data, U_atom);
-        //energy(data, pr1, U_atom); in evolution
+        // energy(data, pr1, U_atom); in evolution
 
-        if (i % 100 == 0)
+        if (i % pr1.steps_space == 0)
         {
             OutputData(data, filename, pr1);
             OutputEnergy(data, filename, pr1);

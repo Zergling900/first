@@ -69,14 +69,6 @@ void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom)
 
             //if < or > L/2 , translate to -L/2
             //------------------------------------------------------------------ 
-            // if (dr.a00 >  Lxh) dr.a00 -= Lx;
-            // if (dr.a00 < -Lxh) dr.a00 += Lx;
-
-            // if (dr.a10 >  Lyh) dr.a10 -= Ly;
-            // if (dr.a10 < -Lyh) dr.a10 += Ly;
-
-            // if (dr.a20 >  Lzh) dr.a20 -= Lz;
-            // if (dr.a20 < -Lzh) dr.a20 += Lz;
 
             if (dr.a00 >  Lxh) dr.a00 -= Lx;
             if (dr.a00 < -Lxh) dr.a00 += Lx;
