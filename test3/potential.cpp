@@ -105,11 +105,17 @@ void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom)
             // F is 3*1 vector
             F = (-48.0) * epsilon * (sr12 - 0.5 * sr6) / (r2) * dr;
 
-            data.F_all = F + data.F_all;
+            //data.F_all = F + data.F_all;//mistake
             //if slow, can delete this part,or change to f^2
 
             data.atoms[i].f = data.atoms[i].f + F;
             data.atoms[j].f = data.atoms[j].f - F;
         };
+    };
+
+    data.U_all = 0.0;
+    for (i = 0; i < data.n; i++)
+    {
+        data.U_all += U_atom[i];
     };
 }

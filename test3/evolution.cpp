@@ -46,15 +46,15 @@ void evolution(const parameter1 &pr1, Data &Data0,vector<double> &U_atom)
         p1 = p0 + hdt * f0;
         r2 = r0 + dt * p1 * m1;
 
-        if (r2.a00 > Data0.Box.a00)
+        if (r2.a00 >= Data0.Box.a00)
             r2.a00 = r2.a00 - Data0.Box.a00;
         if (r2.a00 < 0.0)
             r2.a00 = r2.a00 + Data0.Box.a00;
-        if (r2.a10 > Data0.Box.a11)
+        if (r2.a10 >= Data0.Box.a11)
             r2.a10 = r2.a10 - Data0.Box.a11;
         if (r2.a10 < 0.0)
             r2.a10 = r2.a10 + Data0.Box.a11;
-        if (r2.a20 > Data0.Box.a22)
+        if (r2.a20 >= Data0.Box.a22)
             r2.a20 = r2.a20 - Data0.Box.a22;
         if (r2.a20 < 0.0)
             r2.a20 = r2.a20 + Data0.Box.a22;
