@@ -33,7 +33,7 @@ void read2(const FileName &filename, parameter2 &pr2)
 
     while (getline(fin, line))
     {
-        // 去掉注释
+        // ignore //
         size_t pos = line.find("//");
         if (pos != string::npos)
             line = line.substr(0, pos);
@@ -45,7 +45,7 @@ void read2(const FileName &filename, parameter2 &pr2)
         if (key == "ABOP")
         {
             ss >> key; // Abb / Aww / Abw
-            cout << "Using ABOP parameter set: " << key << endl;
+            cout << "Using parameter set: " << key << endl;
             reading_abop = true;
         }
         else if (reading_abop)
@@ -70,7 +70,7 @@ void read2(const FileName &filename, parameter2 &pr2)
                 ss >> pr2.R;
             else if (key == "D")
                 ss >> pr2.D;
-            else if (key == "mu2")
+            else if (key == "2mu")
                 ss >> pr2.mu;
             else if (key == "rf")
                 ss >> pr2.rf;
@@ -87,7 +87,8 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
 
     int i, j, k;
     // int N = data.n;
-    // data.U_all = 0.0;
+    //data.U_all = 0.0;
+    double U;
     // data.K_all = 0.0;
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     data.f_all = 0.0;
@@ -131,6 +132,7 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
         const Atom &ai = data.atoms[i];
         for (j = i + 1; j < data.n; j++)
         {
+            //E--------------------------------------------------------------------------------------------
             const Atom &aj = data.atoms[j];
             Matrix31 drij = aj.r - ai.r;                                                     // distance
             double rij2 = (drij.a00 * drij.a00 + drij.a10 * drij.a10 + drij.a20 * drij.a20); // distance
@@ -140,17 +142,21 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
             double VA = D0 / (S - 1) * exp(-beta * sqrt(2 / S) * (rij - r0));
 
             double fc1 = 1.0;                                         // r <= R-D
-            double fc2 = 0.5 - 0.5 * sin(0.5 * M_PI * (rij - R) / D); // |R-dr| <= D
+            double fcij = 0.5 - 0.5 * sin(0.5 * M_PI * (rij - R) / D); // |R-dr| <= D
             double fc3 = 0.0;                                         // r >= R+D
 
             double Xij = 0.0;
             double Xji = 0.0;
+            //E--------------------------------------------------------------------------------------------
+            //F--------------------------------------------------------------------------------------------
+            Matrix31 eij = drij * (1.0 / rij);
 
+            //F--------------------------------------------------------------------------------------------
             for (k = 0; k < data.n; k++)
             {
                 if (k == i || k == j)
                     continue;
-
+                //E--------------------------------------------------------------------------------------------
                 const Atom &ak = data.atoms[k];
                 Matrix31 drik = ak.r - ai.r; // distance
                 Matrix31 drjk = ak.r - aj.r;
@@ -160,10 +166,15 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
 
                 double rik = sqrt(rik2);                                   // distance
                 double rjk = sqrt(rjk2);                                   // distance
-                double fck1 = 1.0;                                         // r <= R-D
-                double fck2 = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D); // |R-dr| <= D
-                double fck22 = 0.5 - 0.5 * sin(0.5 * M_PI * (rjk - R) / D);
-                double fck3 = 0.0;                                         // r >= R+D
+                double fcik = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D); // |R-dr| <= D
+                double fcjk = 0.5 - 0.5 * sin(0.5 * M_PI * (rjk - R) / D);
+                //E--------------------------------------------------------------------------------------------
+                //F--------------------------------------------------------------------------------------------
+                Matrix31 eik = drik * (1.0 / rik);
+                Matrix31 ejk = drjk * (1.0 / rjk);
+                
+                //F--------------------------------------------------------------------------------------------
+
                 //------------------------------------------------------------
                 // bji
                 //------------------------------------------------------------
@@ -176,17 +187,17 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
 
                 double g_ijk = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
 
-                if (rik <= R - D)
+                if (rik <= R - D)//1
                 {
-                    Xij += fck1 * g_ijk * exp(mu * (rij - rik));
+                    Xij += g_ijk * exp(mu * (rij - rik));
                 }
-                else if (rik >= R + D)
+                else if (rik >= R + D)//0
                 {
                     Xij += 0.0;
                 }
                 else
                 {
-                    Xij += fck2 * g_ijk * exp(mu * (rij - rik));
+                    Xij += fcik * g_ijk * exp(mu * (rij - rik));
                 }
 
                 //------------------------------------------------------------
@@ -203,7 +214,7 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
 
                 if (rjk <= R - D)
                 {
-                    Xji += fck1 * g_jik * exp(mu * (rij - rjk));
+                    Xji += g_jik * exp(mu * (rij - rjk));
                 }
                 else if (rjk >= R + D)
                 {
@@ -211,11 +222,33 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
                 }
                 else
                 {
-                    Xji += fck22 * g_jik * exp(mu * (rij - rjk));
+                    Xji += fcjk * g_jik * exp(mu * (rij - rjk));
                 }
             }
-            double bij = 1.0 / sqrt(1 + Xij);
-            double bji = 1.0 / sqrt(1 + Xji);
+            
+                double bij = 1.0 / sqrt(1 + Xij);
+                double bji = 1.0 / sqrt(1 + Xji);
+
+                if(rij<= R-D)
+                {
+                    U = VR - 0.5 * (bij + bji) * VA;
+                }
+                else if(rij >= R+D)
+                {
+                    U = 0.0;
+                }
+                else
+                {
+                    U = fcij * (VR - 0.5 * (bij + bji) * VA);
+                };
+                U_atom[i] += 0.5 * U;
+                U_atom[j] += 0.5 * U;
+
+            
+
+
+
+            
 
         }
 

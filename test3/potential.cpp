@@ -113,9 +113,8 @@ void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom)
         };
     };
 
-    data.U_all = 0.0;
     for (i = 0; i < data.n; i++)
     {
-        data.U_all += U_atom[i];
+        data.F_all = data.F_all + data.atoms[i].f;
     };
 }
