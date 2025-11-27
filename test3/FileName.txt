@@ -1,9 +1,10 @@
 parameter                           parameter.p1
+parameter2                          parameter2.p2
 //BCC
 
-//First_Data_file                             BasicData/BCC.md3
-//Data_file                                   Data/BCC.00.md3
-//Et_file                                     Data/BCC.Et.00.md3
+First_Data_file                             BasicData/BCC.md3
+Data_file                                   Data/BCC.00.md3
+Et_file                                     Data/BCC.Et.00.md3
 
 //***************************************************************************
 
@@ -17,6 +18,6 @@ parameter                           parameter.p1
 
 //Diamond
 
-First_Data_file                           BasicData/Diamond.md3
-Data_file                                 Data/Diamond.00.md3
-Et_file                                   Data/Diamond.Et.00.md3
+//First_Data_file                           BasicData/Diamond.md3
+//Data_file                                 Data/Diamond.00.md3
+//Et_file                                   Data/Diamond.Et.00.md3

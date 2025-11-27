@@ -9,6 +9,7 @@ int main()
     FileName filename;
     Data data;
     parameter1 pr1;
+    parameter2 pr2;
     vector<double> U_atom;
 
     // read basic data*******************************************
@@ -22,16 +23,20 @@ int main()
     cout << "STEP 3: read1\n";
     read1(filename, pr1);
 
+    cout << "STEP 4: read2\n";
+    read2(filename, pr2);
+
     cout << "STEP 4: InitEnergyFile\n";
     InitEnergyFile(filename);
     //***********************************************************
 
     // initial***************************************************
-    cout << "STEP 5: RandomV0\n";
+    cout << "STEP 6: RandomV0\n";
     RandomV0(data, pr1);
 
-    cout << "STEP 6: First_LJ_potential\n";
-    LJ_potential(data, pr1, U_atom);
+    cout << "STEP 7: First_potential\n";
+    //LJ_potential(data, pr1, U_atom);
+    BeW_potential(pr1, pr2, data, U_atom);
     energy(data, pr1, U_atom);
     
     OutputData(data, filename, pr1);
@@ -40,10 +45,11 @@ int main()
     //***********************************************************
 
     // evolution*************************************************
-    cout << "STEP 7: evolution\n";
+    cout << "STEP 8: evolution\n";
     for (int i = 0; i < pr1.steps; i++)
     {
-        evolution(pr1, data, U_atom);
+        //LJ_evolution(pr1, data, U_atom);
+        BeW_evolution(pr1, pr2, data, U_atom);
         // energy(data, pr1, U_atom); in evolution
 
         if (i % pr1.steps_space == 0)

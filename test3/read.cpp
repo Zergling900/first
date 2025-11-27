@@ -48,6 +48,10 @@ void readF(const std::string &configFile, FileName &fn)
         {
             fn.parameter_filename = x;
         }
+        else if (key == "parameter2")
+        {
+            fn.parameter2_filename = x;
+        }
         else if (key == "First_Data_file")
         {
             fn.BasicData_filename = x;
@@ -149,4 +153,72 @@ void read1(const FileName &filename, parameter1 &p1)
     }
 
     fin.close();
-}
+};
+
+void read2(const FileName &filename, parameter2 &pr2)
+{
+    ifstream fin(filename.parameter2_filename);
+    if (!fin)
+    {
+        std::cerr << "can't open file: " << filename.parameter2_filename << std::endl;
+        return;
+    }
+
+    string key, line;
+    double value;
+    bool reading_abop = false;
+
+    while (getline(fin, line))
+    {
+        // ignore //
+        size_t pos = line.find("//");
+        if (pos != string::npos)
+            line = line.substr(0, pos);
+
+        stringstream ss(line);
+
+        if (!(ss >> key))
+            continue;
+
+        // ----------------------------------------------------------------
+
+        if (key == "ABOP")
+        {
+            ss >> key; // Abb / Aww / Abw
+            cout << "Using parameter set: " << key << endl;
+            reading_abop = true;
+        }
+        else if (reading_abop)
+        {
+            if (key == "D0")
+                ss >> pr2.D0;
+            else if (key == "r0")
+                ss >> pr2.r0;
+            else if (key == "beta")
+                ss >> pr2.beta;
+            else if (key == "S")
+                ss >> pr2.S;
+            else if (key == "gamma")
+                ss >> pr2.gamma;
+            else if (key == "c")
+                ss >> pr2.c;
+            else if (key == "d")
+                ss >> pr2.d;
+            else if (key == "h")
+                ss >> pr2.h;
+            else if (key == "R")
+                ss >> pr2.R;
+            else if (key == "D")
+                ss >> pr2.D;
+            else if (key == "2mu")
+                ss >> pr2.mu;
+            else if (key == "rf")
+                ss >> pr2.rf;
+            else if (key == "bf")
+                ss >> pr2.bf;
+        }
+    }
+
+    fin.close();
+    // pr2.mu = 0.5 * pr2.mu;
+};

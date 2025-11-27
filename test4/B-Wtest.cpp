@@ -40,6 +40,9 @@ void read2(const FileName &filename, parameter2 &pr2)
 
         stringstream ss(line);
 
+        if (!(ss >> key))
+            continue;
+
         // ----------------------------------------------------------------
 
         if (key == "ABOP")
@@ -80,6 +83,7 @@ void read2(const FileName &filename, parameter2 &pr2)
     }
 
     fin.close();
+    // pr2.mu = 0.5 * pr2.mu;
 };
 
 void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vector<double> &U_atom)
@@ -87,16 +91,16 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
 
     int i, j, k;
     // int N = data.n;
-    //data.U_all = 0.0;
-    double U;
-    // data.K_all = 0.0;
+    // data.U_all = 0.0;
+    // double U;
+    //  data.K_all = 0.0;
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     data.f_all = 0.0;
 
     double D0 = pr2.D0;
     double R = pr2.R;
     double D = pr2.D;
-    double mu = pr2.mu;
+    double mu = pr2.mu; //
     double rf = pr2.rf;
     double bf = pr2.bf;
     double r0 = pr2.r0;
@@ -107,11 +111,11 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
     double d = pr2.d;
     double h = pr2.h;
 
-    double m = pr1.m;
+    // double m = pr1.m;
 
     U_atom.assign(data.n, 0.0); // initialize
 
-    Matrix31 F = Matrix31(0.0, 0.0, 0.0);
+    // Matrix31 F = Matrix31(0.0, 0.0, 0.0);
     //--------------------------------------------------------
     double Lx = data.Box.a00;
     double Ly = data.Box.a11;
@@ -119,8 +123,6 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
     double Lxh = data.Box.a00 / 2.0;
     double Lyh = data.Box.a11 / 2.0;
     double Lzh = data.Box.a22 / 2.0;
-
-    // double rc2 = r0 * r0;
 
     for (i = 0; i < data.n; i++)
     {
@@ -130,128 +132,193 @@ void BeWpotential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vect
     for (i = 0; i < data.n; i++)
     {
         const Atom &ai = data.atoms[i];
-        for (j = i + 1; j < data.n; j++)
+
+        double Uij = 0.0;
+        Matrix31 nUij = Matrix31(0.0, 0.0, 0.0);
+
+        for (j = 0; j < data.n; j++)
         {
-            //E--------------------------------------------------------------------------------------------
+            if (i == j)
+                continue;
+            // E--------------------------------------------------------------------------------------------
             const Atom &aj = data.atoms[j];
-            Matrix31 drij = aj.r - ai.r;                                                     // distance
+            Matrix31 drij = aj.r - ai.r; // distance
+            // PBC*******************************************
+            if (drij.a00 < -Lxh)
+                drij.a00 += Lx;
+            else if (drij.a00 > Lxh)
+                drij.a00 -= Lx;
+            if (drij.a10 < -Lyh)
+                drij.a10 += Ly;
+            else if (drij.a10 > Lyh)
+                drij.a10 -= Ly;
+            if (drij.a20 < -Lzh)
+                drij.a20 += Lz;
+            else if (drij.a20 > Lzh)
+                drij.a20 -= Lz;
+            // PBC*******************************************
+
             double rij2 = (drij.a00 * drij.a00 + drij.a10 * drij.a10 + drij.a20 * drij.a20); // distance
             double rij = sqrt(rij2);                                                         // distance
+            double VR = D0 / (S - 1.0) * exp(-beta * sqrt(2 * S) * (rij - r0));
+            double VA = S * D0 / (S - 1.0) * exp(-beta * sqrt(2 / S) * (rij - r0));
 
-            double VR = D0 / (S - 1) * exp(-beta * sqrt(2 * S) * (rij - r0));
-            double VA = D0 / (S - 1) * exp(-beta * sqrt(2 / S) * (rij - r0));
-
-            double fc1 = 1.0;                                         // r <= R-D
-            double fcij = 0.5 - 0.5 * sin(0.5 * M_PI * (rij - R) / D); // |R-dr| <= D
-            double fc3 = 0.0;                                         // r >= R+D
-
-            double Xij = 0.0;
-            double Xji = 0.0;
-            //E--------------------------------------------------------------------------------------------
-            //F--------------------------------------------------------------------------------------------
+            // double fc1 = 1.0;                                          // r <= R-D
+            double fcij; // |R-dr| <= D
+            // double fc3 = 0.0;                                          // r >= R+D
+            double Xij = 0.0, Xji = 0.0;
+            // E--------------------------------------------------------------------------------------------
+            // F--------------------------------------------------------------------------------------------
             Matrix31 eij = drij * (1.0 / rij);
-
-            //F--------------------------------------------------------------------------------------------
+            Matrix31 nfcij;
+            Matrix31 nVR = D0 / (S - 1.0) * (-beta * sqrt(2 * S)) * exp(-beta * sqrt(2 * S) * (rij - r0)) * eij;
+            Matrix31 nVA = S * D0 / (S - 1.0) * (-beta * sqrt(2 / S)) * exp(-beta * sqrt(2 / S) * (rij - r0)) * eij;
+            Matrix31 nXij = Matrix31(0.0, 0.0, 0.0);
+            Matrix31 nXji = Matrix31(0.0, 0.0, 0.0);
+            // F--------------------------------------------------------------------------------------------
+            // k
             for (k = 0; k < data.n; k++)
             {
                 if (k == i || k == j)
                     continue;
-                //E--------------------------------------------------------------------------------------------
+                // E--------------------------------------------------------------------------------------------
                 const Atom &ak = data.atoms[k];
                 Matrix31 drik = ak.r - ai.r; // distance
-                Matrix31 drjk = ak.r - aj.r;
+                // Matrix31 drjk = ak.r - aj.r;
+
+                // PBC*******************************************
+                if (drik.a00 < -Lxh)
+                    drik.a00 += Lx;
+                else if (drik.a00 > Lxh)
+                    drik.a00 -= Lx;
+                if (drik.a10 < -Lyh)
+                    drik.a10 += Ly;
+                else if (drik.a10 > Lyh)
+                    drik.a10 -= Ly;
+                if (drik.a20 < -Lzh)
+                    drik.a20 += Lz;
+                else if (drik.a20 > Lzh)
+                    drik.a20 -= Lz;
+                // PBC*******************************************
+
+                Matrix31 drjk = drik - drij;
 
                 double rik2 = (drik.a00 * drik.a00 + drik.a10 * drik.a10 + drik.a20 * drik.a20); // distance
                 double rjk2 = (drjk.a00 * drjk.a00 + drjk.a10 * drjk.a10 + drjk.a20 * drjk.a20); // distance
 
-                double rik = sqrt(rik2);                                   // distance
-                double rjk = sqrt(rjk2);                                   // distance
-                double fcik = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D); // |R-dr| <= D
-                double fcjk = 0.5 - 0.5 * sin(0.5 * M_PI * (rjk - R) / D);
-                //E--------------------------------------------------------------------------------------------
-                //F--------------------------------------------------------------------------------------------
+                double rik = sqrt(rik2); // distance
+                double rjk = sqrt(rjk2); // distance
+                double fcik, fcjk;       // |R-dr| <= D
+
+                double eijk = exp(mu * (rij - rik));
+                double ejik = exp(mu * (rij - rjk));
+                // E--------------------------------------------------------------------------------------------
+                // F--------------------------------------------------------------------------------------------
                 Matrix31 eik = drik * (1.0 / rik);
                 Matrix31 ejk = drjk * (1.0 / rjk);
-                
-                //F--------------------------------------------------------------------------------------------
 
+                Matrix31 nfcik, nfcjk;
+                // F--------------------------------------------------------------------------------------------
                 //------------------------------------------------------------
-                // bji
+                //  bij
                 //------------------------------------------------------------
                 double cost_ijk = (rij2 + rik2 - rjk2) / (2.0 * rij * rik); // theta_ijk angle is i?
-                
+
                 if (cost_ijk > 1.0)
                     cost_ijk = 1.0;
                 if (cost_ijk < -1.0)
                     cost_ijk = -1.0;
 
-                double g_ijk = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
+                double gik = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
+                Matrix31 ncost_ijk = (1.0 / (2.0 * rik) - (rik / (2 * rij * rij) + rjk * rjk / (2.0 * rij * rij * rik))) * eij + ((-rij / (2.0 * rik * rik) + 1 / (2.0 * rij) + rjk * rjk / (2.0 * rij * rik * rik))) * eik + ((-rjk / (rij * rik))) * ejk;
+                Matrix31 ngik = gamma * c * c * 2 * (h + cost_ijk) * 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk)) * 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk)) * ncost_ijk;
+                Matrix31 neijk = mu * eijk * (eij - eik);
 
-                if (rik <= R - D)//1
+                if (rik <= R - D) // 1
                 {
-                    Xij += g_ijk * exp(mu * (rij - rik));
+                    fcik = 1.0;
+                    nfcik = Matrix31(0.0, 0.0, 0.0);
                 }
-                else if (rik >= R + D)//0
+                else if (rik >= R + D) // 0
                 {
-                    Xij += 0.0;
+                    fcik = 0.0;
+                    nfcik = Matrix31(0.0, 0.0, 0.0);
                 }
                 else
                 {
-                    Xij += fcik * g_ijk * exp(mu * (rij - rik));
+                    fcik = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D);
+                    nfcik = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rik - R) / D) * eik;
                 }
+                Xij += fcik * gik * exp(mu * (rij - rik));
+                nXij = nXij + nfcik * (gik * eijk) + fcik * (ngik * eijk + gik * neijk);
 
                 //------------------------------------------------------------
                 // bji
                 //------------------------------------------------------------
                 double cost_jik = (rij2 + rjk2 - rik2) / (2.0 * rij * rjk); // theta_ijk angle is j?
-                
+
                 if (cost_jik > 1.0)
                     cost_jik = 1.0;
                 if (cost_jik < -1.0)
                     cost_jik = -1.0;
 
-                double g_jik = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_jik) * (h + cost_jik))));
+                double gjk = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_jik) * (h + cost_jik))));
+                Matrix31 ncost_jik = (1.0 / (2.0 * rjk) - (rjk / (2.0 * rij * rij) + rik * rik / (2.0 * rij * rij * rjk))) * eij + ((-rik / (rij * rjk))) * eik + ((-rij / (2.0 * rjk * rjk) + 1 / (2.0 * rij) + rik * rik / (2.0 * rij * rjk * rjk))) * ejk;
+                Matrix31 ngjk = gamma * c * c * 2 * (h + cost_jik) * 1.0 / (d * d + (h + cost_jik) * (h + cost_jik)) * 1.0 / (d * d + (h + cost_jik) * (h + cost_jik)) * ncost_jik;
+                Matrix31 nejik = mu * ejik * (eij - ejk);
 
-                if (rjk <= R - D)
+                if (rjk <= R - D) // 1
                 {
-                    Xji += g_jik * exp(mu * (rij - rjk));
+                    fcjk = 1.0;
+                    nfcjk = Matrix31(0.0, 0.0, 0.0);
                 }
-                else if (rjk >= R + D)
+                else if (rjk >= R + D) // 0
                 {
-                    Xji += 0.0;
+                    fcjk = 0.0;
+                    nfcjk = Matrix31(0.0, 0.0, 0.0);
                 }
                 else
                 {
-                    Xji += fcjk * g_jik * exp(mu * (rij - rjk));
+                    fcjk = 0.5 - 0.5 * sin(0.5 * M_PI * (rjk - R) / D);
+                    nfcjk = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rjk - R) / D) * ejk;
                 }
+                Xji += fcjk * gjk * exp(mu * (rij - rjk));
+                nXji = nXji + nfcjk * (gjk * ejik) + fcjk * (ngjk * ejik + gjk * nejik);
             }
-            
-                double bij = 1.0 / sqrt(1 + Xij);
-                double bji = 1.0 / sqrt(1 + Xji);
+            // k
 
-                if(rij<= R-D)
-                {
-                    U = VR - 0.5 * (bij + bji) * VA;
-                }
-                else if(rij >= R+D)
-                {
-                    U = 0.0;
-                }
-                else
-                {
-                    U = fcij * (VR - 0.5 * (bij + bji) * VA);
-                };
-                U_atom[i] += 0.5 * U;
-                U_atom[j] += 0.5 * U;
+            double bij = 1.0 / sqrt(1 + Xij);
+            double bji = 1.0 / sqrt(1 + Xji);
 
-            
+            Matrix31 nbij = -0.5 * 1.0 / (sqrt(1 + Xij) * (1 + Xij)) * nXij;
+            Matrix31 nbji = -0.5 * 1.0 / (sqrt(1 + Xji) * (1 + Xji)) * nXji;
 
+            if (rij <= R - D) // 1
+            {
+                fcij = 1.0;
+                nfcij = Matrix31(0.0, 0.0, 0.0);
+            }
+            else if (rij >= R + D) // 0
+            {
+                fcij = 0.0;
+                nfcij = Matrix31(0.0, 0.0, 0.0);
+            }
+            else // 1/2 -1/2sin(pi/2(r-R)/D)
+            {
+                fcij = 0.5 - 0.5 * sin(0.5 * M_PI * (rij - R) / D);
+                nfcij = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rij - R) / D) * eij;
+            }
+            Uij = Uij + fcij * (VR - 0.5 * (bij + bji) * VA);
+            nUij = nUij + nfcij * (VR - 0.5 * (bij + bji) * VA) + fcij * (nVR - 0.5 * (nbij + nbji) * VA - 0.5 * (bij + bji) * nVA);
 
+        } // j-------------------------------------------------------------
 
-            
+        // U_atom[i] += 0.5 * Uij;
+        // U_atom[j] += 0.5 * Uij;
 
-        }
-
-        
-    }
+        // data.atoms[i].f = data.atoms[i].f + nUij;
+        // data.atoms[j].f = data.atoms[j].f - 1.0 * nUij;
+        U_atom[i] = 0.5 * Uij;
+        data.atoms[i].f = -1.0 * nUij; // F = -grad U
+    } // i
 }

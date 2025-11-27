@@ -92,11 +92,21 @@ struct Data
 struct FileName
 {
     string BasicData_filename,Data_filename,Et_file;
-    string parameter_filename;
+    string parameter_filename,parameter2_filename;
 };
 
 struct parameter1
 {
     double dt, epsilon, kb, T, sigma, m;
     int steps, steps_space;
+};
+
+struct parameter2
+{
+    double dt, T, kb, m;
+    int steps, steps_space;
+    double D0, r0, beta, S;
+    double gamma, c, d, h;
+    double R, D;
+    double mu, rf, bf;
 };
