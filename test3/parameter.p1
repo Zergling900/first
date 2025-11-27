@@ -1,11 +1,12 @@
-dt                      1.000000000e-03         //fs
+dt                      1.000000000e-02         //fs
 steps                   1.000000000e+03
-steps_space             5.000000000e+02
+steps_space             5.000000000e+01
 
 T                       300
 kb                      8.6173332622e-05        //Å + eV + amu + fs
 
-//LJ(Ar)
+//LJ
 epsilon                 120 //epsilon/kb
 sigma                   2.44 //BCC 2.44?,
-mass                    39.948 //amu
+//mass                    39.948 //amu
+mass                    183.84//amu 
