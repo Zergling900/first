@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-#filename = "Data/BCC.Et.00.md3"
-filename = "Data/Diamond.Et.00.md3"
+filename = "Data/BCC.Et.00.md3"
+#filename = "Data/Diamond.Et.00.md3"
 #filename = "Data/FCC.Et.00.md3"
 
 # 第一行是列名说明，不作为数据
@@ -25,7 +25,7 @@ for col in df.columns[1:]:
     plt.title(col)      # 图标题使用该列列名
 
     plt.tight_layout()
-    #plt.savefig(f"Data/BCC.Et.00.{col}.png")
-    plt.savefig(f"Data/Diamond.Et.00.{col}.png")
+    plt.savefig(f"Data/BCC.Et.00.{col}.png")
+    #plt.savefig(f"Data/Diamond.Et.00.{col}.png")
     #plt.savefig(f"Data/FCC.Et.00.{col}.png")
     plt.close()

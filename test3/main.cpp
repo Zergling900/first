@@ -41,7 +41,7 @@ int main()
     
     OutputData(data, filename, pr1);
     OutputEnergy(data, filename, pr1);
-    // OutputData(data, filename,pr1);
+    //OutputData(data, filename,pr1);
     //***********************************************************
 
     // evolution*************************************************
@@ -54,12 +54,12 @@ int main()
         BeW_evolution(pr1, pr2, data, U_atom);
         // energy(data, pr1, U_atom); in evolution
 
-        if (i!=0 && i % pr1.steps_space == 0)
+        if ((i+1) % pr1.steps_space == 0)
         {
             OutputData(data, filename, pr1);
             OutputEnergy(data, filename, pr1);
         }
-
+        //data.T += pr1.dt;
     }
     //***********************************************************
 

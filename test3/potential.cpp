@@ -351,6 +351,7 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
         // data.atoms[i].f = data.atoms[i].f + nUij;
         // data.atoms[j].f = data.atoms[j].f - 1.0 * nUij;
         U_atom[i] = 0.5 * Uij;
-        data.atoms[i].f = -1.0 * nUij; // F = -grad U
+        data.atoms[i].f = nUij;
+        //data.atoms[i].f = -1.0 * nUij; // F = -grad U
     } // i
 }
