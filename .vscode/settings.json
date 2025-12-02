@@ -57,6 +57,16 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "chrono": "cpp",
+        "execution": "cpp",
+        "format": "cpp",
+        "forward_list": "cpp",
+        "queue": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "stack": "cpp",
+        "variant": "cpp",
+        "charconv": "cpp"
     }
 }
