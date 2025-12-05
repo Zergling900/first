@@ -376,6 +376,7 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
             //Matrix31 fj_xyz = - Fij.a00 * seij;//atom_k to atom_j force  && d/di = -d/dj
             data.atoms[i].f = data.atoms[i].f + 0.5*fij_xyz;
             data.atoms[j].f = data.atoms[j].f - 0.5*fij_xyz;
+            //* for i != j so * 0.5 
 
         } // j-------------------------------------------------------------
 
