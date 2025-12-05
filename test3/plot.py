@@ -24,6 +24,9 @@ for col in df.columns[1:]:
     plt.ylabel(col)     # y 轴使用该列列名
     plt.title(col)      # 图标题使用该列列名
 
+    plt.ticklabel_format(style='plain', axis='y')   # 纵轴用普通数字
+    plt.gca().get_yaxis().get_major_formatter().set_useOffset(False)
+    
     plt.tight_layout()
     plt.savefig(f"Data/BCC.Et.00.{col}.png")
     #plt.savefig(f"Data/Diamond.Et.00.{col}.png")

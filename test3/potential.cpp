@@ -350,9 +350,9 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
                 Matrix31 fi_xyz = - fk_ijk.a00 * (-1.0 * seij) - fk_ijk.a10 *(-1.0 * seik);//atom_k to atom_i force
                 //-gradU. -->  -(du/dij * dij/dj) - (du/djk * djk/dj)
                 Matrix31 fj_xyz = - fk_ijk.a00 * seij - fk_ijk.a20 * (-1.0 * sejk);//atom_k to atom_j force  && d/di = -d/dj
-                data.atoms[k].f = data.atoms[k].f + fk_xyz;
-                data.atoms[i].f = data.atoms[i].f + fi_xyz;
-                data.atoms[j].f = data.atoms[j].f + fj_xyz;
+                data.atoms[k].f = data.atoms[k].f + 0.5*fk_xyz;
+                data.atoms[i].f = data.atoms[i].f + 0.5*fi_xyz;
+                data.atoms[j].f = data.atoms[j].f + 0.5*fj_xyz;
 
             }
             // k
@@ -374,8 +374,8 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
             Matrix31 fij_xyz = - Fij.a00 * (-1.0 * seij);//atom_k to atom_i force
             //-gradU. -->  (du/dij * dij/di) 
             //Matrix31 fj_xyz = - Fij.a00 * seij;//atom_k to atom_j force  && d/di = -d/dj
-            data.atoms[i].f = data.atoms[i].f + fij_xyz;
-            data.atoms[j].f = data.atoms[j].f - fij_xyz;
+            data.atoms[i].f = data.atoms[i].f + 0.5*fij_xyz;
+            data.atoms[j].f = data.atoms[j].f - 0.5*fij_xyz;
 
         } // j-------------------------------------------------------------
 
