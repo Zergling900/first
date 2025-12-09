@@ -125,7 +125,12 @@ void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom)
     };
 }
 
-void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vector<double> &U_atom)
+void BeW_potential(const parameter1 &pr1,
+                   const parameter2 &pr2_WW,
+                   const parameter2 &pr2_BB,
+                   const parameter2 &pr2_WB,
+                   Data &data,
+                   vector<double> &U_atom)
 {
 
     int i, j, k;
@@ -135,20 +140,6 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
     //  data.K_all = 0.0;
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     //data.f_all = 0.0;
-
-    double D0 = pr2.D0;
-    double R = pr2.R;
-    double D = pr2.D;
-    double mu = pr2.mu; //
-    double rf = pr2.rf;
-    double bf = pr2.bf;
-    double r0 = pr2.r0;
-    double beta = pr2.beta;
-    double S = pr2.S;
-    double gamma = pr2.gamma;
-    double c = pr2.c;
-    double d = pr2.d;
-    double h = pr2.h;
 
     // double m = pr1.m;
 
@@ -182,6 +173,48 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
             // E--------------------------------------------------------------------------------------------
             const Atom &aj = data.atoms[j];
             Matrix31 drij = aj.r - ai.r; // distance
+            // Choose ABOP parameter set based on species of i and j
+            const parameter2 *p = nullptr;
+            const std::string &ni = ai.name;
+            const std::string &nj = aj.name;
+
+            // Here we assume:
+            //  - pr2_WW: parameters for W-W pairs
+            //  - pr2_BB: parameters for Be-Be pairs
+            //  - pr2_WB: parameters for W-Be (or Be-W) pairs
+            bool i_is_W  = (ni == "W");
+            bool j_is_W  = (nj == "W");
+            bool i_is_Be = (ni == "Be");
+            bool j_is_Be = (nj == "Be");
+
+            if (i_is_W && j_is_W)
+            {
+                p = &pr2_WW;
+            }
+            else if (i_is_Be && j_is_Be)
+            {
+                p = &pr2_BB;
+            }
+            else
+            {
+                // mixed W-Be or Be-W pair
+                p = &pr2_WB;
+            }
+
+            // Extract ABOP parameters for this i-j pair
+            double D0   = p->D0;
+            double R    = p->R;
+            double D    = p->D;
+            double mu   = p->mu;
+            double rf   = p->rf;
+            double bf   = p->bf;
+            double r0   = p->r0;
+            double beta = p->beta;
+            double S    = p->S;
+            double gamma = p->gamma;
+            double c     = p->c;
+            double d     = p->d;
+            double h     = p->h;
             // PBC*******************************************
             if (drij.a00 < -Lxh)
                 drij.a00 += Lx;
@@ -216,9 +249,6 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
             Matrix31 nfcij;
             Matrix31 nVR = D0 / (S - 1.0) * (-bsR) * exp(-bsR * (rij - r0)) * eij;
             Matrix31 nVA = S * D0 / (S - 1.0) * (-bsA) * exp(-bsA * (rij - r0)) * eij;
-            Matrix31 nXij = Matrix31(0.0, 0.0, 0.0);
-            Matrix31 Sum_nXij = Matrix31(0.0, 0.0, 0.0);
-            Matrix31 nXji = Matrix31(0.0, 0.0, 0.0);
             // F--------------------------------------------------------------------------------------------
 
             //fc_ij------------------------------------------------
@@ -240,14 +270,14 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
             //fc_ij------------------------------------------------
 
             // k
-            std::vector<Matrix31> nX_list;
-            std::vector<Matrix31> seik_list;
-            std::vector<Matrix31> sejk_list;
+            std::vector<Matrix31> dX_dri_list;
+            std::vector<Matrix31> dX_drj_list;
+            std::vector<Matrix31> dX_drk_list;
             std::vector<int>      k_list;
 
-            nX_list.clear();
-            seik_list.clear();
-            sejk_list.clear();
+            dX_dri_list.clear();
+            dX_drj_list.clear();
+            dX_drk_list.clear();
             k_list.clear();
 
             for (k = 0; k < data.n; k++)
@@ -257,7 +287,6 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
                 // E--------------------------------------------------------------------------------------------
                 const Atom &ak = data.atoms[k];
                 Matrix31 drik = ak.r - ai.r; // distance
-                // Matrix31 drjk = ak.r - aj.r;
 
                 // PBC*******************************************
                 if (drik.a00 < -Lxh)
@@ -277,83 +306,120 @@ void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vec
                 Matrix31 drjk = drik - drij;
 
                 double rik2 = (drik.a00 * drik.a00 + drik.a10 * drik.a10 + drik.a20 * drik.a20); // distance
-                double rjk2 = (drjk.a00 * drjk.a00 + drjk.a10 * drjk.a10 + drjk.a20 * drjk.a20); // distance
-
                 double rik = sqrt(rik2); // distance
-                double rjk = sqrt(rjk2); // distance
-                double fcik, fcjk;       // |R-dr| <= D
+                if (rik == 0.0)
+                {
+                    continue;
+                }
 
-                double eijk = exp(mu * (rij - rik));
-                //double ejik = exp(mu * (rij - rjk));
-                // E--------------------------------------------------------------------------------------------
-                // F--------------------------------------------------------------------------------------------
-                Matrix31 eik = Matrix31(0.0, 1.0, 0.0);
-                Matrix31 ejk = Matrix31(0.0, 0.0, 1.0);
+                // cutoff fc(r_ik)
+                double fcik;
+                double dfc_drik; // d fcik / d r_ik
+
+                if (rik <= R - D) // 1
+                {
+                    fcik = 1.0;
+                    dfc_drik = 0.0;
+                }
+                else if (rik >= R + D) // 0
+                {
+                    fcik = 0.0;
+                    dfc_drik = 0.0;
+                }
+                else
+                {
+                    fcik = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D);
+                    dfc_drik = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rik - R) / D);
+                }
+
+                // unit vectors
                 Matrix31 seik = drik * (1.0 / rik);
-                Matrix31 sejk = drjk * (1.0 / rjk);
 
-                Matrix31 nfcik, nfcjk;
-                // F--------------------------------------------------------------------------------------------
-                //------------------------------------------------------------
-                //  bij
-                //------------------------------------------------------------
-                double cost_ijk = (rij2 + rik2 - rjk2) / (2.0 * rij * rik); // theta_ijk angle is i?
+                // cos(theta_ijk) using vector formula
+                double dot_ij_ik = drij.a00 * drik.a00 + drij.a10 * drik.a10 + drij.a20 * drik.a20;
+                double cost_ijk = dot_ij_ik / (rij * rik);
 
                 if (cost_ijk > 1.0)
                     cost_ijk = 1.0;
                 if (cost_ijk < -1.0)
                     cost_ijk = -1.0;
 
-                double gik = gamma * (1 + c * c * (1.0 / (d * d) - 1 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
-                Matrix31 ncost_ijk = (1.0 / (2.0 * rik) - (rik / (2 * rij * rij) + rjk * rjk / (2.0 * rij * rij * rik))) * eij + ((-rij / (2.0 * rik * rik) + 1 / (2.0 * rij) + rjk * rjk / (2.0 * rij * rik * rik))) * eik + ((-rjk / (rij * rik))) * ejk;
-                Matrix31 ngik = gamma * c * c * 2 * (h + cost_ijk) * 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk)) * 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk)) * ncost_ijk;
-                Matrix31 neijk = mu * eijk * (eij - eik);
+                // g_ik(costheta)
+                double gik = gamma * (1 + c * c * (1.0 / (d * d) - 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
 
-                if (rik <= R - D) // 1
-                {
-                    fcik = 1.0;
-                    nfcik = Matrix31(0.0, 0.0, 0.0);
-                }
-                else if (rik >= R + D) // 0
-                {
-                    fcik = 0.0;
-                    nfcik = Matrix31(0.0, 0.0, 0.0);
-                }
-                else
-                {
-                    fcik = 0.5 - 0.5 * sin(0.5 * M_PI * (rik - R) / D);
-                    nfcik = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rik - R) / D) * eik;
-                }
+                // dg/dcos
+                double denom = d * d + (h + cost_ijk) * (h + cost_ijk);
+                double dg_dcos = gamma * c * c * 2.0 * (h + cost_ijk) / (denom * denom);
+
+                // gradients of cos(theta_ijk) w.r.t. u = drij and v = drik
+                double inv_rij = 1.0 / rij;
+                double inv_rik = 1.0 / rik;
+                double inv_rij2 = inv_rij * inv_rij;
+                double inv_rik2 = inv_rik * inv_rik;
+                double inv_rij_rik = inv_rij * inv_rik;
+
+                Matrix31 u = drij;
+                Matrix31 v = drik;
+
+                double uv_dot = dot_ij_ik;
+
+                Matrix31 term_u = u * (uv_dot * inv_rij2);
+                Matrix31 dcos_du = (v - term_u) * inv_rij_rik;
+
+                Matrix31 term_v = v * (uv_dot * inv_rik2);
+                Matrix31 dcos_dv = (u - term_v) * inv_rij_rik;
+
+                // convert to gradients w.r.t. r_i, r_j, r_k
+                Matrix31 dcos_dri = (dcos_du + dcos_dv) * (-1.0);
+                Matrix31 dcos_drj = dcos_du;
+                Matrix31 dcos_drk = dcos_dv;
+
+                Matrix31 dg_dri = dcos_dri * dg_dcos;
+                Matrix31 dg_drj = dcos_drj * dg_dcos;
+                Matrix31 dg_drk = dcos_drk * dg_dcos;
+
+                // e_ijk = exp(mu * (r_ij - r_ik))
+                double eijk = exp(mu * (rij - rik));
+
+                // gradients of cutoff and exponential
+                Matrix31 dfc_dri = seik * (-dfc_drik);
+                Matrix31 dfc_drj = Matrix31(0.0, 0.0, 0.0);
+                Matrix31 dfc_drk = seik * dfc_drik;
+
+                Matrix31 de_dri = (seik - seij) * (mu * eijk);
+                Matrix31 de_drj = seij * (mu * eijk);
+                Matrix31 de_drk = seik * (-mu * eijk);
+
+                // gradients of X_ijk = fcik * gik * eijk
+                Matrix31 dX_dri = dfc_dri * (gik * eijk) + dg_dri * (fcik * eijk) + de_dri * (fcik * gik);
+                Matrix31 dX_drj = dfc_drj * (gik * eijk) + dg_drj * (fcik * eijk) + de_drj * (fcik * gik);
+                Matrix31 dX_drk = dfc_drk * (gik * eijk) + dg_drk * (fcik * eijk) + de_drk * (fcik * gik);
+
                 Xij += fcik * gik * eijk;
-                //Sum_Xij = Sum_Xij + Xij;
-                nXij = nfcik * (gik * eijk) + fcik * (ngik * eijk + gik * neijk);
-                //Sum_nXij = Sum_nXij + nXij;
 
-                nX_list.push_back(nXij);
-                seik_list.push_back(seik);
-                sejk_list.push_back(sejk);
+                dX_dri_list.push_back(dX_dri);
+                dX_drj_list.push_back(dX_drj);
+                dX_drk_list.push_back(dX_drk);
                 k_list.push_back(k);
             }
-            double fk =  fcij * VA * (0.5 * 1.0 / (sqrt(1 + Xij) * (1 + Xij)));
-            for(int k1 = 0; k1 < nX_list.size(); k1++)
+            double fk = fcij * VA * (0.5 * 1.0 / (sqrt(1 + Xij) * (1 + Xij)));
+            for (int k1 = 0; k1 < static_cast<int>(k_list.size()); k1++)
             {
                 int k = k_list[k1];
-                Matrix31 nXij = nX_list[k1];
-                Matrix31 seik = seik_list[k1];
-                Matrix31 sejk = sejk_list[k1];
 
-                Matrix31 fk_ijk =  fk * nXij;
-                //f. ijk to xyz transform
-                //-gradU. -->  -(du/dik * dik/dk) - (du/djk * djk/dk) 
-                Matrix31 fk_xyz = - fk_ijk.a10 * seik - fk_ijk.a20 * sejk;//fk. ijk to xyz transform
-                //-gradU. -->  -(du/dij * dij/di) - (du/dik * dik/di)
-                Matrix31 fi_xyz = - fk_ijk.a00 * (-1.0 * seij) - fk_ijk.a10 *(-1.0 * seik);//atom_k to atom_i force
-                //-gradU. -->  -(du/dij * dij/dj) - (du/djk * djk/dj)
-                Matrix31 fj_xyz = - fk_ijk.a00 * seij - fk_ijk.a20 * (-1.0 * sejk);//atom_k to atom_j force  && d/di = -d/dj
-                data.atoms[k].f = data.atoms[k].f + 0.5*fk_xyz;
-                data.atoms[i].f = data.atoms[i].f + 0.5*fi_xyz;
-                data.atoms[j].f = data.atoms[j].f + 0.5*fj_xyz;
+                // forces from X_ij through X_ijk contributions
+                Matrix31 dX_dri = dX_dri_list[k1];
+                Matrix31 dX_drj = dX_drj_list[k1];
+                Matrix31 dX_drk = dX_drk_list[k1];
 
+                Matrix31 Fi_xyz = dX_dri * (-fk); // F = -dU/dr
+                Matrix31 Fj_xyz = dX_drj * (-fk);
+                Matrix31 Fk_xyz = dX_drk * (-fk);
+
+                // 0.5 factor to avoid double counting i-j pairs
+                data.atoms[i].f = data.atoms[i].f + 0.5 * Fi_xyz;
+                data.atoms[j].f = data.atoms[j].f + 0.5 * Fj_xyz;
+                data.atoms[k].f = data.atoms[k].f + 0.5 * Fk_xyz;
             }
             // k
 

@@ -5,11 +5,11 @@
 // #include <cmath>
 // #include <fstream>
 #include <vector>
+#include <algorithm>
+#include <cctype>
 // #include <iomanip>
 
 #include "3.h"
-
-using namespace std;
 
 //---------------------------------------------------------------------------
 // BasicData_filename,Data_filename,Ut_file,Kt_file
@@ -109,30 +109,60 @@ void read1(const FileName &filename, parameter1 &p1)
         return;
     }
 
-    string key, line;
-    double value;
-    int i;
-    while (getline(fin, line))
-    {
-        stringstream ss(line);
+    std::string line;
+    std::string key;
+    char eq = 0;
+    double value = 0.0;
 
-        ss >> key >> value;
+    // 
+    double endtime_fs = 0.0;
+    double steps_space_fs = 0.0;
+
+    while (std::getline(fin, line))
+    {
+        // delete comment#
+        std::size_t pos = line.find('#');
+        if (pos != std::string::npos)
+            line = line.substr(0, pos);
+
+        // delete space
+        auto not_space = [](int ch)
+        { return !std::isspace(ch); };
+
+        if (!line.empty())
+        {
+            line.erase(line.begin(), std::find_if(line.begin(), line.end(), not_space));
+            line.erase(std::find_if(line.rbegin(), line.rend(), not_space).base(), line.end());
+        }
+
+        if (line.empty())
+            continue;
+
+        std::stringstream ss(line);
+        ss >> key >> eq >> value;
+        if (!ss || eq != '=')
+            continue;
 
         if (key == "dt")
         {
-            p1.dt = value;
+            p1.dt = value; // fs
         }
-        else if (key == "steps")
+        else if (key == "endtime")
         {
-            p1.steps = static_cast<int>(value);
+            endtime_fs = value; // fs
         }
         else if (key == "steps_space")
         {
-            p1.steps_space = static_cast<int>(value);
+            // space time（fs）
+            steps_space_fs = value;
         }
         else if (key == "T")
         {
             p1.T = value;
+        }
+        else if (key == "mass")
+        {
+            p1.m = value;
         }
         else if (key == "kb")
         {
@@ -145,17 +175,25 @@ void read1(const FileName &filename, parameter1 &p1)
         else if (key == "sigma")
         {
             p1.sigma = value;
-        }
-        else if (key == "mass")
-        {
-            p1.m = value;
-        }
+        } 
+    }
+
+    // culculate steps and transpose to int
+    if (p1.dt > 0.0 && endtime_fs > 0.0)
+    {
+        p1.steps = static_cast<int>(std::round(endtime_fs / p1.dt));
+    }
+
+    // steps_space to int
+    if (p1.dt > 0.0 && steps_space_fs > 0.0)
+    {
+        p1.steps_space = static_cast<int>(std::round(steps_space_fs / p1.dt));
     }
 
     fin.close();
-};
+}
 
-void read2(const FileName &filename, parameter2 &pr2)
+void read2(const FileName &filename, parameter2 &pr2_WW, parameter2 &pr2_BB, parameter2 &pr2_WB)
 {
     ifstream fin(filename.parameter2_filename);
     if (!fin)
@@ -164,61 +202,122 @@ void read2(const FileName &filename, parameter2 &pr2)
         return;
     }
 
-    string key, line;
-    double value;
-    bool reading_abop = false;
+    std::string line;
 
-    while (getline(fin, line))
+    // 先清零（可选）
+    auto reset_abop = [](parameter2 &p)
     {
-        // ignore //
-        size_t pos = line.find("//");
-        if (pos != string::npos)
+        p.D0 = 0.0;
+        p.r0 = 0.0;
+        p.beta = 0.0;
+        p.S = 0.0;
+        p.gamma = 0.0;
+        p.c = 0.0;
+        p.d = 0.0;
+        p.h = 0.0;
+        p.R = 0.0;
+        p.D = 0.0;
+        p.mu = 0.0;
+        p.rf = 0.0;
+        p.bf = 0;
+    };
+
+    reset_abop(pr2_WW);
+    reset_abop(pr2_BB);
+    reset_abop(pr2_WB);
+
+    while (std::getline(fin, line))
+    {
+        // delete comment#
+        std::size_t pos = line.find('#');
+        if (pos != std::string::npos)
             line = line.substr(0, pos);
 
-        stringstream ss(line);
+        // delete space
+        auto not_space = [](int ch)
+        { return !std::isspace(ch); };
 
-        if (!(ss >> key))
+        if (!line.empty())
+        {
+            line.erase(line.begin(), std::find_if(line.begin(), line.end(), not_space));
+            line.erase(std::find_if(line.rbegin(), line.rend(), not_space).base(), line.end());
+        }
+
+        if (line.empty())
             continue;
 
-        // ----------------------------------------------------------------
+        // such as ABB.D0 = xx
+        std::string key;
+        char eq = 0;
+        double value = 0.0;
 
-        if (key == "ABOP")
+        std::stringstream ss(line);
+        ss >> key;
+
+        if (!ss)
+            continue;
+        // 拆分出前缀和参数名
+        std::size_t dot_pos = key.find('.');
+        if (dot_pos == std::string::npos)
         {
-            ss >> key; // Abb / Aww / Abw
-            cout << "Using parameter set: " << key << endl;
-            reading_abop = true;
+            //  if not PREFIX.name  then skip
+            continue;
         }
-        else if (reading_abop)
+
+        std::string prefix = key.substr(0, dot_pos);       // ABB / AWW / ABW
+        std::string pname = key.substr(dot_pos + 1);       // D0 / r0 / ...
+
+        ss >> eq >> value;
+        if (!ss || eq != '=')
+            continue;
+
+        parameter2 *target = nullptr;
+        if (prefix == "AWW" || prefix == "Aww" || prefix == "aww")
         {
-            if (key == "D0")
-                ss >> pr2.D0;
-            else if (key == "r0")
-                ss >> pr2.r0;
-            else if (key == "beta")
-                ss >> pr2.beta;
-            else if (key == "S")
-                ss >> pr2.S;
-            else if (key == "gamma")
-                ss >> pr2.gamma;
-            else if (key == "c")
-                ss >> pr2.c;
-            else if (key == "d")
-                ss >> pr2.d;
-            else if (key == "h")
-                ss >> pr2.h;
-            else if (key == "R")
-                ss >> pr2.R;
-            else if (key == "D")
-                ss >> pr2.D;
-            else if (key == "2mu")
-                ss >> pr2.mu;
-            else if (key == "rf")
-                ss >> pr2.rf;
-            else if (key == "bf")
-                ss >> pr2.bf;
+            target = &pr2_WW; // W-W
         }
+        else if (prefix == "ABB" || prefix == "Abb" || prefix == "abb")
+        {
+            target = &pr2_BB; // Be-Be
+        }
+        else if (prefix == "AWB" || prefix == "Awb" || prefix == "awb")
+        {
+            target = &pr2_WB; // Be-W
+        }
+        else
+        {
+            continue;
+        }
+
+        if (pname == "D0")
+            target->D0 = value;
+        else if (pname == "r0")
+            target->r0 = value;
+        else if (pname == "beta")
+            target->beta = value;
+        else if (pname == "S")
+            target->S = value;
+        else if (pname == "gamma")
+            target->gamma = value;
+        else if (pname == "c")
+            target->c = value;
+        else if (pname == "d")
+            target->d = value;
+        else if (pname == "h")
+            target->h = value;
+        else if (pname == "R")
+            target->R = value;
+        else if (pname == "D")
+            target->D = value;
+        else if (pname == "2mu")
+            target->mu = 0.5 * value; // convert 2mu -> mu
+        else if (pname == "mu")
+            target->mu = value;
+        else if (pname == "rf")
+            target->rf = value;
+        else if (pname == "bf")
+            target->bf = value;
     }
 
     fin.close();
-    // pr2.mu = 0.5 * pr2.mu;
-};
+}

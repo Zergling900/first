@@ -1,12 +1,12 @@
-dt                      1.000000000e-03         //fs
-steps                   50.000000000e+03
-steps_space             50.000000000e+01
+# ===== System =====
+dt = 1.0e-03 #fs
+endtime = 50.0 #fs
+steps_space = 0.5 #fs
 
-T                       300
-kb                      8.6173332622e-05        //Å + eV + amu + fs
+T = 300
+mass = 39.948 #amu
 
-//LJ
-epsilon                 120 //epsilon/kb
-sigma                   2.44 //BCC 2.44?,
-//mass                    39.948 //amu
-mass                    183.84//amu 
+# ===== LJ =====
+kb = 8.6173332622e-05 #Å + eV + amu + fs
+#epsilon = 120 #epsilon/kb
+#sigma = 2.44 rgba(187, 204, 204, 1) 2.44?

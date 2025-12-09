@@ -1,5 +1,5 @@
 parameter                           parameter.p1
-parameter2                          parameter2.p2
+parameter2                          parameter.p2
 //BCC
 
 First_Data_file                             BasicData/BCC.md3

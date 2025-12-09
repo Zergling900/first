@@ -97,14 +97,12 @@ struct FileName
 
 struct parameter1
 {
-    double dt, epsilon, kb, T, sigma, m;
-    int steps, steps_space;
+    double dt, epsilon, kb, T, sigma, m, endtime;
+    int steps,steps_space;
 };
 
 struct parameter2
 {
-    double dt, T, kb, m;
-    int steps, steps_space;
     double D0, r0, beta, S;
     double gamma, c, d, h;
     double R, D;
