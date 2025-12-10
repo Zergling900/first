@@ -17,9 +17,19 @@ void BeW_potential(const parameter1 &pr1,
                    const parameter2 &pr2_BB,
                    const parameter2 &pr2_WB,
                    Data &data,vector<double> &U_atom);
+void BeW_potential2(const parameter1 &pr1,
+                   const parameter2 &pr2_WW,
+                   const parameter2 &pr2_BB,
+                   const parameter2 &pr2_WB,
+                   Data &data,vector<double> &U_atom);
 void LJ_evolution(const parameter1 &pr1, Data &Data0,vector<double> &U_atom);
 //void BeW_evolution(const parameter1 &pr1, const parameter2 &pr2, Data &Data0,vector<double> &U_atom);
 void BeW_evolution(const parameter1 &pr1,
+                   const parameter2 &pr2_WW,
+                   const parameter2 &pr2_BB,
+                   const parameter2 &pr2_WB,
+                   Data &data,vector<double> &U_atom);
+void BeW_evolution2(const parameter1 &pr1,
                    const parameter2 &pr2_WW,
                    const parameter2 &pr2_BB,
                    const parameter2 &pr2_WB,

@@ -37,6 +37,8 @@ int main()
     cout << "STEP 7: First_potential\n";
     //LJ_potential(data, pr1, U_atom);
     BeW_potential(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    //BeW_potential2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    
     energy(data, pr1, U_atom);
     
     OutputData(data, filename, pr1);
@@ -52,6 +54,8 @@ int main()
         printf("calculating time = %f\n", data.T);
         //LJ_evolution(pr1, data, U_atom);
         BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+        //BeW_evolution2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+        
         // energy(data, pr1, U_atom); in evolution
 
         if ((i+1) % pr1.steps_space == 0)
