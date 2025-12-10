@@ -348,8 +348,8 @@ void BeW_potential(const parameter1 &pr1,
                 double gik = gamma * (1 + c * c * (1.0 / (d * d) - 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
 
                 // dg/dcos
-                double denom = d * d + (h + cost_ijk) * (h + cost_ijk);
-                double dg_dcos = gamma * c * c * 2.0 * (h + cost_ijk) / (denom * denom);
+                double u = d * d + (h + cost_ijk) * (h + cost_ijk);
+                double dg_dcos = gamma * c * c * 2.0 * (h + cost_ijk) / (u * u);
 
                 // gradients of cos(theta_ijk) w.r.t. u = drij and v = drik
                 double inv_rij = 1.0 / rij;
@@ -358,21 +358,21 @@ void BeW_potential(const parameter1 &pr1,
                 double inv_rik2 = inv_rik * inv_rik;
                 double inv_rij_rik = inv_rij * inv_rik;
 
-                Matrix31 u = drij;
-                Matrix31 v = drik;
+                //Matrix31 u = drij;
+                //Matrix31 v = drik;
 
-                double uv_dot = dot_ij_ik;
+                //double uv_dot = dot_ij_ik;
 
-                Matrix31 term_u = u * (uv_dot * inv_rij2);
-                Matrix31 dcos_du = (v - term_u) * inv_rij_rik;
+                Matrix31 term_drij = drij * (dot_ij_ik * inv_rij2);
+                Matrix31 dcos_ddrij = (drik - term_drij) * inv_rij_rik;
 
-                Matrix31 term_v = v * (uv_dot * inv_rik2);
-                Matrix31 dcos_dv = (u - term_v) * inv_rij_rik;
+                Matrix31 term_drik = drik * (dot_ij_ik * inv_rik2);
+                Matrix31 dcos_ddrik = (drij - term_drik) * inv_rij_rik;
 
                 // convert to gradients w.r.t. r_i, r_j, r_k
-                Matrix31 dcos_dri = (dcos_du + dcos_dv) * (-1.0);
-                Matrix31 dcos_drj = dcos_du;
-                Matrix31 dcos_drk = dcos_dv;
+                Matrix31 dcos_dri = (dcos_ddrij + dcos_ddrik) * (-1.0);
+                Matrix31 dcos_drj = dcos_ddrij;
+                Matrix31 dcos_drk = dcos_ddrik;
 
                 Matrix31 dg_dri = dcos_dri * dg_dcos;
                 Matrix31 dg_drj = dcos_drj * dg_dcos;
