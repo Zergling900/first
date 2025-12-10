@@ -3,12 +3,12 @@ dt = 10.0e-03 #fs
 endtime = 50.0 #fs
 steps_space = 0.5 #fs
 
-T = 300
-mass_Ar = 39.948 #amu
+T = 300 #K
+kb = 8.6173332622e-05 #Å + eV + amu + fs
 mass_W = 183.84
 mass_Be = 9.012 #amu
 
 # ===== LJ =====
-kb = 8.6173332622e-05 #Å + eV + amu + fs
+mass_Ar = 39.948 #amu
 epsilon = 120 #epsilon/kb
-sigma = 2.44 rgba(187, 204, 204, 1) 2.44?
+sigma = 2.44 # 2.44?

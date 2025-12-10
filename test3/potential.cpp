@@ -141,8 +141,6 @@ void BeW_potential(const parameter1 &pr1,
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     //data.f_all = 0.0;
 
-    // double m = pr1.m;
-
     U_atom.assign(data.n, 0.0); // initialize
 
     // Matrix31 F = Matrix31(0.0, 0.0, 0.0);
@@ -218,15 +216,15 @@ void BeW_potential(const parameter1 &pr1,
             // PBC*******************************************
             if (drij.a00 < -Lxh)
                 drij.a00 += Lx;
-            else if (drij.a00 > Lxh)
+            else if (drij.a00 >= Lxh)
                 drij.a00 -= Lx;
             if (drij.a10 < -Lyh)
                 drij.a10 += Ly;
-            else if (drij.a10 > Lyh)
+            else if (drij.a10 >= Lyh)
                 drij.a10 -= Ly;
             if (drij.a20 < -Lzh)
                 drij.a20 += Lz;
-            else if (drij.a20 > Lzh)
+            else if (drij.a20 >= Lzh)
                 drij.a20 -= Lz;
             // PBC*******************************************
 
@@ -234,9 +232,10 @@ void BeW_potential(const parameter1 &pr1,
             double rij = sqrt(rij2);                                                         // distance
             double bsR = beta * sqrt(2 * S);
             double bsA = beta * sqrt(2 / S);
-            double VR = D0 / (S - 1.0) * exp(-bsR * (rij - r0));
-            double VA = S * D0 / (S - 1.0) * exp(-bsA * (rij - r0));
-
+            
+            double VR = (D0 / (S - 1.0)) * exp(-bsR * (rij - r0));
+            double VA = (S * D0 / (S - 1.0)) * exp(-bsA * (rij - r0));
+            
             // double fc1 = 1.0;                                          // r <= R-D
             double fcij; // |R-dr| <= D
             // double fc3 = 0.0;                                          // r >= R+D
@@ -245,27 +244,27 @@ void BeW_potential(const parameter1 &pr1,
             // E--------------------------------------------------------------------------------------------
             // F--------------------------------------------------------------------------------------------
             Matrix31 seij = drij * (1.0 / rij);
-            Matrix31 eij = Matrix31(1.0, 0.0, 0.0);
-            Matrix31 nfcij;
-            Matrix31 nVR = D0 / (S - 1.0) * (-bsR) * exp(-bsR * (rij - r0)) * eij;
-            Matrix31 nVA = S * D0 / (S - 1.0) * (-bsA) * exp(-bsA * (rij - r0)) * eij;
+            //Matrix31 eij = Matrix31(1.0, 0.0, 0.0);
+            double nfcij;
+            double nVR = D0 / (S - 1.0) * (-bsR) * exp(-bsR * (rij - r0));
+            double nVA = S * D0 / (S - 1.0) * (-bsA) * exp(-bsA * (rij - r0));
             // F--------------------------------------------------------------------------------------------
 
             //fc_ij------------------------------------------------
-            if (rij <= R - D) // 1
+            if (rij <= (R - D)) // 1
             {
                 fcij = 1.0;
-                nfcij = Matrix31(0.0, 0.0, 0.0);
+                nfcij = 0.0;
             }
-            else if (rij >= R + D) // 0
+            else if (rij >= (R + D)) // 0
             {
                 fcij = 0.0;
-                nfcij = Matrix31(0.0, 0.0, 0.0);
+                nfcij = 0.0;
             }
             else // 1/2 -1/2sin(pi/2(r-R)/D)
             {
                 fcij = 0.5 - 0.5 * sin(0.5 * M_PI * (rij - R) / D);
-                nfcij = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rij - R) / D) * eij;
+                nfcij = -1.0 * M_PI * 0.25 * (1.0 / D) * cos(0.5 * M_PI * (rij - R) / D);
             }
             //fc_ij------------------------------------------------
 
@@ -291,19 +290,19 @@ void BeW_potential(const parameter1 &pr1,
                 // PBC*******************************************
                 if (drik.a00 < -Lxh)
                     drik.a00 += Lx;
-                else if (drik.a00 > Lxh)
+                else if (drik.a00 >= Lxh)
                     drik.a00 -= Lx;
                 if (drik.a10 < -Lyh)
                     drik.a10 += Ly;
-                else if (drik.a10 > Lyh)
+                else if (drik.a10 >= Lyh)
                     drik.a10 -= Ly;
                 if (drik.a20 < -Lzh)
                     drik.a20 += Lz;
-                else if (drik.a20 > Lzh)
+                else if (drik.a20 >= Lzh)
                     drik.a20 -= Lz;
                 // PBC*******************************************
 
-                Matrix31 drjk = drik - drij;
+                //Matrix31 drjk = drik - drij;
 
                 double rik2 = (drik.a00 * drik.a00 + drik.a10 * drik.a10 + drik.a20 * drik.a20); // distance
                 double rik = sqrt(rik2); // distance
@@ -338,12 +337,12 @@ void BeW_potential(const parameter1 &pr1,
                 // cos(theta_ijk) using vector formula
                 double dot_ij_ik = drij.a00 * drik.a00 + drij.a10 * drik.a10 + drij.a20 * drik.a20;
                 double cost_ijk = dot_ij_ik / (rij * rik);
-
+                
                 if (cost_ijk > 1.0)
                     cost_ijk = 1.0;
                 if (cost_ijk < -1.0)
                     cost_ijk = -1.0;
-
+                
                 // g_ik(costheta)
                 double gik = gamma * (1 + c * c * (1.0 / (d * d) - 1.0 / (d * d + (h + cost_ijk) * (h + cost_ijk))));
 
@@ -363,6 +362,8 @@ void BeW_potential(const parameter1 &pr1,
 
                 //double uv_dot = dot_ij_ik;
 
+                //dcos = drik/(rij*rik) - (drij \cdot drik)/(rij^3*rik) * drij
+
                 Matrix31 term_drij = drij * (dot_ij_ik * inv_rij2);
                 Matrix31 dcos_ddrij = (drik - term_drij) * inv_rij_rik;
 
@@ -370,6 +371,7 @@ void BeW_potential(const parameter1 &pr1,
                 Matrix31 dcos_ddrik = (drij - term_drik) * inv_rij_rik;
 
                 // convert to gradients w.r.t. r_i, r_j, r_k
+                //dcos = dcos/drij *drij/dri + dcos/drik *drik/dri
                 Matrix31 dcos_dri = (dcos_ddrij + dcos_ddrik) * (-1.0);
                 Matrix31 dcos_drj = dcos_ddrij;
                 Matrix31 dcos_drk = dcos_ddrik;
@@ -432,12 +434,12 @@ void BeW_potential(const parameter1 &pr1,
             // double bji = 1.0 ;
 
             //Matrix31 nbij = -0.5 * 1.0 / (sqrt(1 + Xij) * (1 + Xij)) * Sum_nXij;
-
+            //!ZBL?
             Uij = Uij + fcij * (VR - (bij)*VA);
             //nUij = nUij + nfcij * (VR - (bij)*VA) + fcij * (nVR - (nbij)*VA - (bij)*nVA);
-            Matrix31 Fij = nfcij * ( VR - bij * VA) + fcij * (nVR - bij * nVA);
+            double Fij = nfcij * ( VR - bij * VA) + fcij * (nVR - bij * nVA);
             //gradU. -->  -(du/dij * dij/di) 
-            Matrix31 fij_xyz = - Fij.a00 * (-1.0 * seij);//atom_k to atom_i force
+            Matrix31 fij_xyz = - Fij * (-1.0 * seij);//atom_k to atom_i force
             //-gradU. -->  (du/dij * dij/di) 
             //Matrix31 fj_xyz = - Fij.a00 * seij;//atom_k to atom_j force  && d/di = -d/dj
             data.atoms[i].f = data.atoms[i].f + 0.5*fij_xyz;
