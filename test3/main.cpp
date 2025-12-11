@@ -32,12 +32,21 @@ int main()
 
     // initial***************************************************
     cout << "STEP 6: RandomV0\n";
+    //***********************************************************
+
+    for(int i=0;i<data.n;i++)
+    {
+        data.atoms[i].r = data.atoms[i].r + Matrix31(0.6,0.6,0.6);
+    }
+
+    // ***********************************************************
+    cout << "STEP 6: RandomV0\n";
     RandomV0(data, pr1);
 
     cout << "STEP 7: First_potential\n";
     //LJ_potential(data, pr1, U_atom);
-    BeW_potential(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
-    //BeW_potential2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    //BeW_potential(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    BeW_potential2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
     
     energy(data, pr1, U_atom);
     
@@ -53,8 +62,8 @@ int main()
         data.T += pr1.dt;
         printf("calculating time = %f\n", data.T);
         //LJ_evolution(pr1, data, U_atom);
-        BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
-        //BeW_evolution2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+        //BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+        BeW_evolution2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
         
         // energy(data, pr1, U_atom); in evolution
 

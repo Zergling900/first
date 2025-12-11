@@ -534,12 +534,12 @@ void BeW_potential2(const parameter1 &pr1,
             double c     = p->c;
             double d     = p->d;
             double h     = p->h;
-            // double rf  = p->rf; // ZBL-related, not used yet
+            // double rf  = p->rf; // !ZBL-related, not used yet
             // double bf  = p->bf;
 
-            // Minimum-image displacement r_ij = r_j - r_i
+            // displacement r_ij = r_j - r_i
             Matrix31 drij = aj.r - ai.r;
-
+            //PBC*******************************************
             if (drij.a00 < -Lxh)      drij.a00 += Lx;
             else if (drij.a00 >= Lxh) drij.a00 -= Lx;
 
@@ -548,7 +548,7 @@ void BeW_potential2(const parameter1 &pr1,
 
             if (drij.a20 < -Lzh)      drij.a20 += Lz;
             else if (drij.a20 >= Lzh) drij.a20 -= Lz;
-
+            //PBC*******************************************
             double rij2 = drij.a00 * drij.a00
                         + drij.a10 * drij.a10
                         + drij.a20 * drij.a20;
@@ -594,7 +594,7 @@ void BeW_potential2(const parameter1 &pr1,
                 continue;
             }
 
-            // Radial derivatives of VR, VA
+            
             double nVR = (D0 / (S - 1.0)) * (-bsR) * std::exp(-bsR * (rij - r0));
             double nVA = (S * D0 / (S - 1.0)) * (-bsA) * std::exp(-bsA * (rij - r0));
 
@@ -629,6 +629,7 @@ void BeW_potential2(const parameter1 &pr1,
 
                 // ---- central i: vectors r_ik ----
                 Matrix31 drik = ak.r - ai.r;
+                // PBC*******************************************
                 if (drik.a00 < -Lxh)      drik.a00 += Lx;
                 else if (drik.a00 >= Lxh) drik.a00 -= Lx;
 
@@ -637,6 +638,7 @@ void BeW_potential2(const parameter1 &pr1,
 
                 if (drik.a20 < -Lzh)      drik.a20 += Lz;
                 else if (drik.a20 >= Lzh) drik.a20 -= Lz;
+                // PBC*******************************************
 
                 double rik2 = drik.a00 * drik.a00
                             + drik.a10 * drik.a10
@@ -668,7 +670,7 @@ void BeW_potential2(const parameter1 &pr1,
                 Matrix31 dXji_drj(0.0, 0.0, 0.0);
                 Matrix31 dXji_drk(0.0, 0.0, 0.0);
 
-                // ---------- Xij (i-centered) part ----------
+                // ---------- Xij part ----------
                 if (rik > 0.0)
                 {
                     // cutoff fc(r_ik)
@@ -922,6 +924,7 @@ void BeW_potential2(const parameter1 &pr1,
             data.atoms[i].f = data.atoms[i].f + fij_xyz;
             data.atoms[j].f = data.atoms[j].f - fij_xyz;
         }
+        
     }
 
     // total force

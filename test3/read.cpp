@@ -310,9 +310,10 @@ void read2(const FileName &filename, parameter2 &pr2_WW, parameter2 &pr2_BB, par
         else if (pname == "D")
             target->D = value;
         else if (pname == "2mu")
-            target->mu = 0.5 * value; // convert 2mu -> mu
-        else if (pname == "mu")
-            target->mu = value;
+            //target->mu = 0.5 * value; // convert 2mu -> mu
+            target->mu = value; // convert 2mu -> mu
+        //else if (pname == "mu")
+            //target->mu = value;
         else if (pname == "rf")
             target->rf = value;
         else if (pname == "bf")
