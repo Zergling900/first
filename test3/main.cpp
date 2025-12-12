@@ -59,8 +59,8 @@ int main()
     cout << "STEP 8: evolution\n";
     for (int i = 0; i < pr1.steps; i++)
     {
-        data.T += pr1.dt;
-        printf("calculating time = %f\n", data.T);
+        data.t += pr1.dt;
+        printf("calculating time = %f\n", data.t);
         //LJ_evolution(pr1, data, U_atom);
         //BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
         BeW_evolution2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
@@ -70,9 +70,12 @@ int main()
         if ((i+1) % pr1.steps_space == 0)
         {
             OutputData(data, filename, pr1);
+        }
+        if ((i+1) % (pr1.steps_space/10) == 0)
+        {
             OutputEnergy(data, filename, pr1);
         }
-        //data.T += pr1.dt;
+        //data.t += pr1.dt;
     }
     //***********************************************************
 

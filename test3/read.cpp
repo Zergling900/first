@@ -83,7 +83,7 @@ void read0(const FileName &filename, Data &data)
 
     // 2. read time & energy
     string tmp;
-    fin >> tmp >> data.T >> tmp >> tmp >> data.E;
+    fin >> tmp >> data.t >> tmp >> tmp >> data.E;
     getline(fin, dummy);
 
     // 3. read Box

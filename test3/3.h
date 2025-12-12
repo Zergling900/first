@@ -82,7 +82,7 @@ struct Atom
 struct Data
 {
     int n;                              // number of atoms
-    double T,E;                           // unknown
+    double t,T,E;                           // unknown
     double U_all,K_all,f_all;                           // energy
     Matrix31 F_all;
     Matrix33 Box;

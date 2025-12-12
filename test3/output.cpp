@@ -10,7 +10,7 @@
     //Matrix33 Box = Cell_L0 * (data.Box_Ln + 1.0);
     Matrix33 Box = Cell * (data.Box_Ln + 1);
     fprintf(fp, "%d\n", n);
-    fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.T, data.E);
+    fprintf(fp, "   time=   %f (fs)  Energy=  %f (eV)\n", data.t, data.E);
     fprintf(fp, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
          Box.a00, Box.a10, Box.a20, Box.a01, Box.a11, Box.a21, Box.a02, Box.a12, Box.a22);
     for(const auto &d : output)
@@ -34,8 +34,8 @@ void InitEnergyFile(const FileName &filename)
         printf("Cannot open Et file!\n");
         return;
     }
-    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s %16s\n",
-            "time", "n", "E", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
+    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s %16s %16s\n",
+            "time", "n", "E", "T", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
     fclose(fp);
 }
 
@@ -47,7 +47,7 @@ void OutputData(const Data &data, const FileName &filename, const parameter1 &p1
     //n
     fprintf(fp1, "%d\n", data.n);
     //t & E
-    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.T, data.E);
+    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.t, data.E);
     //box x*3 y*3 z*3
     fprintf(fp1, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
             data.Box.a00, data.Box.a10, data.Box.a20,  // x
@@ -71,7 +71,7 @@ void OutputData(const Data &data, const FileName &filename, const parameter1 &p1
 void OutputEnergy(const Data &data, const FileName &filename, const parameter1 &p1)
 {
     FILE *fp2 = fopen(filename.Et_file.c_str(), "a+");
-    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-             data.T,data.n,data.E, data.U_all,data.K_all,data.F_all.a00,data.F_all.a10,data.F_all.a20);
+    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
+             data.t,data.n,data.E, data.T, data.U_all,data.K_all,data.F_all.a00,data.F_all.a10,data.F_all.a20);
     fclose(fp2);
 };
