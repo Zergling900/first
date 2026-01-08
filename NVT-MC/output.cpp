@@ -34,39 +34,57 @@ void InitEnergyFile(const FileName &filename)
         printf("Cannot open Et file!\n");
         return;
     }
-    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s %16s %16s\n",
-            "time", "n", "E", "T", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
+    fprintf(fp, "%8s %8s %16s %16s %16s %16s %16s %16s %16s %16s\n",
+            "time", "n", "E", "H", "T", "U_all", "K_all", "F_all_x", "F_all_y", "F_all_z");
     fclose(fp);
 }
 
-void OutputData(const Data &data, const FileName &filename, const parameter1 &p1)
-{
-    double mw1 = 1.0 / p1.mw;
-    double mb1 = 1.0 / p1.mb;
+void OutputData(const Data &data, const FileName &filename, const parameter1 &pr1)
+{   
+    double m = pr1.mb0;
+    double mw1 = 1.0 / pr1.mw0;
+    double mb1 = 1.0 / pr1.mb0;
+    double length = pr1.length;
+    double tau = pr1.tau;
+    double E = data.E;
+    double P_0 = pr1.P0;
+    double E_0 = pr1.E0;
+    double F_0 = pr1.F0;
 
     FILE *fp1 = fopen(filename.Data_filename.c_str(), "a+");
     //n
     fprintf(fp1, "%d\n", data.n);
     //t & E
-    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.t, data.E);
+    E = E *E_0; //to eV
+    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.t * tau, E);
+    Matrix33 Box = data.Box;
+    Box = Box * length; //dimensional
     //box x*3 y*3 z*3
     fprintf(fp1, "BOX %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-            data.Box.a00, data.Box.a10, data.Box.a20,  // x
-            data.Box.a01, data.Box.a11, data.Box.a21,  // y
-            data.Box.a02, data.Box.a12, data.Box.a22); // z
+            Box.a00, Box.a10, Box.a20,  // x
+            Box.a01, Box.a11, Box.a21,  // y
+            Box.a02, Box.a12, Box.a22); // z
     //atoms
     Matrix31 v, dv;
     for (int i = 0; i < data.n; i++)
     {
         string name = data.atoms[i].name;
         Matrix31 r = data.atoms[i].r;
+        Matrix31 p = data.atoms[i].p;
+        Matrix31 f = data.atoms[i].f;
+
+        //dimensional
+        r = r * length; // position
+        p = p * P_0; // momentum to velocity
+        f = f * F_0; // force to acceleration
+         
         if (name == "W"){
-            v = data.atoms[i].p * mw1;
-            dv = data.atoms[i].f * mw1;
+            v = p * mw1;
+            dv = f * mw1;
         }
         else if (name == "Be"){
-            v = data.atoms[i].p * mb1;
-            dv = data.atoms[i].f * mb1;
+            v = p * mb1;
+            dv = f * mb1;
         }
 
         fprintf(fp1, " %4s  %18.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
@@ -76,10 +94,36 @@ void OutputData(const Data &data, const FileName &filename, const parameter1 &p1
     //--------------------------------------------------------------------------------------
 }
 
-void OutputEnergy(const Data &data, const FileName &filename, const parameter1 &p1)
+void OutputEnergy(const Data &data, const FileName &filename, const parameter1 &pr1)
 {
     FILE *fp2 = fopen(filename.Et_file.c_str(), "a+");
-    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
-             data.t,data.n,data.E, data.T, data.U_all,data.K_all,data.F_all.a00,data.F_all.a10,data.F_all.a20);
+    double E = data.E;
+    double U = data.U_all;
+    double K = data.K_all;
+    double H = data.H;
+    double T = data.T;
+
+    double F_x = data.F_all.a00;
+    double F_y = data.F_all.a10;
+    double F_z = data.F_all.a20;
+
+    double m = pr1.mb0;
+    double length = pr1.length;
+    double tau = pr1.tau;
+    double t = data.t * tau; // fs
+    double E_0 = pr1.E0;
+    double F_0 = pr1.F0;
+
+    E = E *E_0; //to eV
+    U = U *E_0;
+    K = K *E_0;
+
+    F_x = F_x * F_0;
+    F_y = F_y * F_0;
+    F_z = F_z * F_0;
+
+    T = T * pr1.T0;
+    fprintf(fp2, "%8f %8d %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f %16.8f\n",
+             t,data.n, E, H, T, U,K,F_x,F_y,F_z);
     fclose(fp2);
 };

@@ -10,6 +10,7 @@ void energy(Data &data, const parameter1 &pr1, vector<double> &U_atom)
     data.U_all = 0.0;
     data.K_all = 0.0;
     data.T = 0.0;
+    double s2 = data.s0 *data.s0;
     for (int i = 0; i < data.n; i++)
     {
         data.U_all += U_atom[i];
@@ -17,14 +18,14 @@ void energy(Data &data, const parameter1 &pr1, vector<double> &U_atom)
             data.K_all += (data.atoms[i].p.a00 * data.atoms[i].p.a00
                     + data.atoms[i].p.a10 * data.atoms[i].p.a10
                     + data.atoms[i].p.a20 * data.atoms[i].p.a20)
-                    * (0.5 / pr1.mw);
+                    * (0.5 / (pr1.mw *s2));
         else if(data.atoms[i].name == "Be")
             data.K_all += (data.atoms[i].p.a00 * data.atoms[i].p.a00
                         + data.atoms[i].p.a10 * data.atoms[i].p.a10
                         + data.atoms[i].p.a20 * data.atoms[i].p.a20)
-                        * (0.5 / pr1.mb);
+                        * (0.5 / (pr1.mb *s2));
     }
-    data.K_all = data.K_all * 103.64; // eV
-    data.T = 2.0 * (data.K_all / (pr1.g * pr1.kb));
+    data.T = 2.0 * (data.K_all / pr1.g);
     data.E = data.U_all + data.K_all;
+    data.H = data.E + data.ps0 * data.ps0 / (2.0 * pr1.Q) + pr1.g * pr1.T * log(data.s0);
 }

@@ -151,7 +151,7 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             endtime_fs = value; // fs
         }
-        else if (key == "steps_space")
+        else if (key == "steps_space_fs")
         {
             // space time（fs）
             steps_space_fs = value;
@@ -163,10 +163,12 @@ void read1(const FileName &filename, parameter1 &p1)
         else if (key == "mass_W")
         {
             p1.mw = value;
+            p1.mw0 = value;
         }
         else if (key == "mass_Be")
         {
             p1.mb = value;
+            p1.mb0 = value;
         }
         else if (key == "kb")
         {
@@ -192,6 +194,11 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             p1.Q = value;
         }
+        else if (key == "tau")
+        {
+            p1.tau = value;
+        }
+
     }
 
     // culculate steps and transpose to int

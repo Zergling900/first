@@ -12,12 +12,14 @@
 std::mt19937 global_eng(std::random_device{}());
 
 void RandomV0(Data &data, parameter1 &pr1)
-{
-    double sigamaW = std::sqrt(pr1.kb * pr1.T * pr1.mw); // maxwell-boltzmann(W)
-    double sigamaBe = std::sqrt(pr1.kb * pr1.T * pr1.mb); // maxwell-boltzmann(Be)
+{   
+    //double m = pr1.mb0;
+    double T = pr1.T;
+    double sigamaW =  pr1.s0 * pr1.s0 * std::sqrt(T * pr1.mw); // maxwell-boltzmann(W)
+    double sigamaBe = pr1.s0 * pr1.s0 * std::sqrt(T * pr1.mb); // maxwell-boltzmann(Be)
     if (sigamaW == 0.0 || sigamaBe == 0.0)
     {
-        cerr << "[RandomV0] sigma is zero (kb=" << pr1.kb << ", T=" << pr1.T << ", mW=" << pr1.mw << ", mBe=" << pr1.mb
+        cerr << "[RandomV0] sigma is zero (kb=" << pr1.kb << ", T=" << T << ", mW=" << pr1.mw << ", mBe=" << pr1.mb
              << "), velocities will stay 0. Check parameter.pr1.\n";
     }
     normal_distribution<double> gaussW(0.0, sigamaW);//gauss(average, sigma)
@@ -57,6 +59,8 @@ void RandomV0(Data &data, parameter1 &pr1)
     {
         data.atoms[i].p = data.atoms[i].p - p_cm;
     }
+
+    
     pr1.g = 3 * data.n - 3;
     data.s0 = pr1.s0;
     data.ps0 = pr1.ps0;

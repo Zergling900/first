@@ -31,7 +31,7 @@ int main()
     //***********************************************************
 
     // initial***************************************************
-    cout << "STEP 6: RandomV0\n";
+    //cout << "STEP 6: RandomV0\n";
     //***********************************************************
 
     for(int i=0;i<data.n;i++)
@@ -40,6 +40,8 @@ int main()
     }
 
     // ***********************************************************
+    cout << "STEP 5: Dimensionalless\n";
+    Dimensionalless(data, pr1, pr2_WW, pr2_BB, pr2_WB);
     cout << "STEP 6: RandomV0\n";
     RandomV0(data, pr1);
 
@@ -60,7 +62,7 @@ int main()
     for (int i = 0; i < pr1.steps; i++)
     {
         data.t += pr1.dt;
-        printf("calculating time = %f,s0 = %8f\n", data.t, data.s0);
+        printf("calculating time = %f,s0 = %8f\n", data.t * pr1.tau, data.s0);
         //LJ_evolution(pr1, data, U_atom);
         //BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
         BeW_evolution1(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);

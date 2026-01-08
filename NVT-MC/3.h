@@ -82,7 +82,7 @@ struct Atom
 struct Data
 {
     int n;                              // number of atoms
-    double t,T,E,s0,ps0;                           // unknown
+    double t,T,E,H,s0,ps0;                           // unknown
     double U_all,K_all,f_all;                           // energy
     Matrix31 F_all;
     Matrix33 Box;
@@ -97,8 +97,9 @@ struct FileName
 
 struct parameter1
 {
-    double dt, epsilon, kb, T, sigma, mw,mb, endtime;
-    double s0,ps0, xi, Q;
+    double dt, epsilon, kb, T, sigma, mw, mb, mw0, mb0, endtime;
+    double s0,ps0, xi, Q, tau, length;
+    double E0,F0,T0,P0;
     int g;
     int steps,steps_space;
 };
