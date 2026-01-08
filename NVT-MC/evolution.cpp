@@ -24,7 +24,7 @@ void BeW_evolution1(const parameter1 &pr1, const parameter2 &pr2_WW,const parame
     //double steps = pr1.steps;
     //!*****new******
     double kb = pr1.kb;
-    double Q = pr1.Q/(pr1.E0 * pr1.tau * pr1.tau);
+    double Q = pr1.Q;
     int g = pr1.g;
     double s0 = data.s0, ps0 = data.ps0;
     // if (s0 == pr1.s0 && ps0 == pr1.ps0)
