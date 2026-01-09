@@ -16,7 +16,6 @@ void BeW_evolution1(const parameter1 &pr1, const parameter2 &pr2_WW,const parame
     double dt = pr1.dt;
     double hdt = dt / 2.0;
     //double epsilon = pr1.epsilon;
-    //double kb = pr1.kb;
     double mw1 = 1.0 / pr1.mw;
     double mb1 = 1.0 / pr1.mb;
     //double T = pr1.T;
@@ -61,20 +60,17 @@ void BeW_evolution1(const parameter1 &pr1, const parameter2 &pr2_WW,const parame
         
         //***new***
         //dp/dt = f - (ps/Q)*p
+        //!p1 = p0 + hdt * (f0 - (ps0/Q)*p0);
+        p1 = p0 + hdt * (f0);
         if (data.atoms[i].name == "W")
         {
-            p1 = p0 + hdt * (f0 - (ps0/Q)*p0);
-            //s1 = s0 + hdt * ps0 / Q;
             r2 = r0 + (dt * p1 * mw1 ) * (1.0/ (s1 * s1));
-            //ps2 = ps0 + dt *(2.0*K/(s1*s1) - g * kb * T / s1);
         }
         else if(data.atoms[i].name == "Be")
         {
-            p1 = p0 + hdt * (f0 - (ps0/Q)*p0);
-            //s1 = s0 + hdt * ps0 / Q;
             r2 = r0 + (dt * p1 * mb1 ) * (1.0/ (s1 * s1));
-            //ps2 = ps0 + dt *(2.0*K/(s1*s1) - g * kb * T / s1);
         }
+
         if (r2.a00 >= data.Box.a00)
             r2.a00 = r2.a00 - data.Box.a00;
         if (r2.a00 < 0.0)
@@ -99,14 +95,14 @@ void BeW_evolution1(const parameter1 &pr1, const parameter2 &pr2_WW,const parame
             K += (data.atoms[i].p.a00 * data.atoms[i].p.a00
                     + data.atoms[i].p.a10 * data.atoms[i].p.a10
                     + data.atoms[i].p.a20 * data.atoms[i].p.a20)
-                    * (0.5 / pr1.mw);
+                    * (0.5 /(pr1.mw * s1 * s1));
         else if(data.atoms[i].name == "Be")
             K += (data.atoms[i].p.a00 * data.atoms[i].p.a00
-                        + data.atoms[i].p.a10 * data.atoms[i].p.a10
-                        + data.atoms[i].p.a20 * data.atoms[i].p.a20)
-                        * (0.5 / pr1.mb);
+                    + data.atoms[i].p.a10 * data.atoms[i].p.a10
+                    + data.atoms[i].p.a20 * data.atoms[i].p.a20)
+                    * (0.5 / (pr1.mb * s1 * s1));
     }
-    ps2 = ps0 + dt *(2.0*K/(s1*s1*s1) - g * T / s1);
+    ps2 = ps0 + dt *(2.0*K/s1 - g * T / s1);
     s2 = s1 + hdt * ps2 / Q;
     //---
     BeW_potential2(pr1, pr2_WW,pr2_BB,pr2_WB, data, U_atom);
@@ -115,7 +111,8 @@ void BeW_evolution1(const parameter1 &pr1, const parameter2 &pr2_WW,const parame
     {
         p1 = data.atoms[i].p;
         f2 = data.atoms[i].f;
-        p2 = p1 + hdt * (f2 - (ps2/Q)*p1);
+        //!p2 = p1 + hdt * (f2 - (ps2/Q)*p1);
+        p2 = p1 + hdt * (f2);
         data.atoms[i].p = p2;
         //s2 = s1 + hdt * ps2 / Q;
     }

@@ -56,7 +56,7 @@ void OutputData(const Data &data, const FileName &filename, const parameter1 &pr
     fprintf(fp1, "%d\n", data.n);
     //t & E
     E = E *E_0; //to eV
-    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.t * tau, E);
+    fprintf(fp1, "   time=   %8f (fs)  Energy=  %8f (eV)\n", data.t_p * tau, E);
     Matrix33 Box = data.Box;
     Box = Box * length; //dimensional
     //box x*3 y*3 z*3
@@ -75,7 +75,7 @@ void OutputData(const Data &data, const FileName &filename, const parameter1 &pr
 
         //dimensional
         r = r * length; // position
-        p = p * P_0; // momentum to velocity
+        p = p * P_0 * (1.0/data.s0); // momentum to velocity
         f = f * F_0; // force to acceleration
          
         if (name == "W"){
@@ -110,13 +110,14 @@ void OutputEnergy(const Data &data, const FileName &filename, const parameter1 &
     double m = pr1.mb0;
     double length = pr1.length;
     double tau = pr1.tau;
-    double t = data.t * tau; // fs
+    double t = data.t_p * tau; // fs
     double E_0 = pr1.E0;
     double F_0 = pr1.F0;
 
     E = E *E_0; //to eV
     U = U *E_0;
     K = K *E_0;
+    H = H *E_0;
 
     F_x = F_x * F_0;
     F_y = F_y * F_0;

@@ -15,8 +15,8 @@ void RandomV0(Data &data, parameter1 &pr1)
 {   
     //double m = pr1.mb0;
     double T = pr1.T;
-    double sigamaW =  pr1.s0 * pr1.s0 * std::sqrt(T * pr1.mw); // maxwell-boltzmann(W)
-    double sigamaBe = pr1.s0 * pr1.s0 * std::sqrt(T * pr1.mb); // maxwell-boltzmann(Be)
+    double sigamaW =  pr1.s0 * std::sqrt(T * pr1.mw); // maxwell-boltzmann(W)
+    double sigamaBe = pr1.s0 * std::sqrt(T * pr1.mb); // maxwell-boltzmann(Be)
     if (sigamaW == 0.0 || sigamaBe == 0.0)
     {
         cerr << "[RandomV0] sigma is zero (kb=" << pr1.kb << ", T=" << T << ", mW=" << pr1.mw << ", mBe=" << pr1.mb

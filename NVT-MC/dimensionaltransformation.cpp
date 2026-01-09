@@ -17,13 +17,13 @@ void Dimensionalless(Data &data, parameter1 &pr1, parameter2 &pr2_WW, parameter2
 
     //mass
     double m = pr1.mb0;
-    pr1.E0 = (m*length*length)/(tau*tau)*103.642695;
+    pr1.E0 = (m*length*length)/(tau*tau)*103.642695;//eV
     pr1.F0 = (m * length / (tau * tau));
     pr1.P0 = (m * length / tau);
     pr1.T0 = pr1.E0 / pr1.kb;
 
-    pr1.mw = pr1.mw / m;
-    pr1.mb = pr1.mb / m; 
+    pr1.mw = pr1.mw0 / m;
+    pr1.mb = pr1.mb0 / m; 
     pr1.T = pr1.T / pr1.T0;
     pr1.Q = pr1.Q/(pr1.E0 * pr1.tau * pr1.tau);
     //atom

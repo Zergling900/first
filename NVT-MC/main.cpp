@@ -62,7 +62,8 @@ int main()
     for (int i = 0; i < pr1.steps; i++)
     {
         data.t += pr1.dt;
-        printf("calculating time = %f,s0 = %8f\n", data.t * pr1.tau, data.s0);
+        data.t_p += pr1.dt / data.s0;
+        printf("calculating time = %f,s0 = %8f\n", data.t_p * pr1.tau, data.s0);
         //LJ_evolution(pr1, data, U_atom);
         //BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
         BeW_evolution1(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
@@ -73,6 +74,7 @@ int main()
         {
             OutputData(data, filename, pr1);
         }
+
         if ((i+1) % (pr1.steps_space/10) == 0)
         {
             OutputEnergy(data, filename, pr1);
