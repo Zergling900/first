@@ -1,0 +1,46 @@
+# ===== ABOP AWW =====
+AWW.D0    = 5.41861
+AWW.r0    = 2.34095
+AWW.beta  = 1.38528
+AWW.S     = 1.92708
+AWW.gamma = 1.88227e-3
+AWW.c     = 2.14969
+AWW.d     = 0.17126
+AWW.h     = -0.27780
+#AWW.R     = 3.10
+#AWW.D     = 0.10
+AWW.R     = 3.50 #Juslin N, Erhart P, Tr ̈askelin P, Nord J, Henriksson K O E, Nordlund K, Salonen E and Albe K 2005 Analytical interatomic potential for modelling non-equilibrium processes in the W–C–H system J. Appl. Phys.
+AWW.D     = 0.30
+AWW.2mu   = 0.458764
+AWW.rf    = 1.3
+AWW.bf    = 12
+
+# ===== ABOP ABB =====
+ABB.D0    = 1.03571
+ABB.r0    = 2.07880
+ABB.beta  = 1.3
+ABB.S     = 1.88982
+ABB.gamma = 8.19587e-7
+ABB.c     = 89.3894
+ABB.d     = 0.27443
+ABB.h     = 0.7606934
+ABB.R     = 2.535
+ABB.D     = 0.15
+ABB.2mu   = 0.0
+ABB.rf    = 0.8
+ABB.bf    = 15
+
+# ===== ABOP AWB =====
+AWB.D0    = 3.79097878993
+AWB.r0    = 2.06330081049
+AWB.beta  = 0.91209070485
+AWB.S     = 2.29285247962
+AWB.gamma = 2.17149597670e-1
+AWB.c     = 34.3953715887
+AWB.d     = 554.148353798
+AWB.h     = -0.8660
+AWB.R     = 3.30
+AWB.D     = 0.20
+AWB.2mu   = 1.2
+AWB.rf    = 1.3
+AWB.bf    = 13
