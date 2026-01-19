@@ -1,0 +1,15 @@
+# ===== System =====
+dt = 10.0e-03 #fs
+endtime = 50.0 #fs
+steps_space = 0.5 #fs
+s = 1.0
+
+T = 300 #K
+kb = 8.6173332622e-05 #Å + eV + amu + fs
+mass_W = 183.84
+mass_Be = 9.012 #amu
+
+# ===== LJ =====
+mass_Ar = 39.948 #amu
+epsilon = 120 #epsilon/kb
+sigma = 2.44 # 2.44?
