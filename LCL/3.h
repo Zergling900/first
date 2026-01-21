@@ -79,6 +79,16 @@ struct Atom
     Matrix31 p;                     //momentum
     Matrix31 f;                     //force
 };
+struct Cell_List
+{
+    double Wx,Wy,Wz;
+    int Mx,My,Mz,cell_num;
+    std::vector<int> cell;      //N
+    std::vector<int> num_in_cell;  //M number of particles in each cell
+    std::vector<int> cell_offset;  // The starting point of cell[i] in [atom_indices]
+    std::vector<int> atom_indices; // Install the particle IDs in segments into cells
+    std::vector<int> atom_order;   // Local order of particle[i] within its cell
+};
 struct Data
 {
     int n;                              // number of atoms
