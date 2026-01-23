@@ -151,7 +151,7 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             endtime_fs = value; // fs
         }
-        else if (key == "steps_space")
+        else if (key == "steps_space_fs")
         {
             // space time（fs）
             steps_space_fs = value;
@@ -160,13 +160,25 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             p1.T = value;
         }
+        else if (key == "TT")
+        {
+            p1.TT = value;
+        }
         else if (key == "mass_W")
         {
-            p1.m = value;
+            p1.mw = value;
+        }
+        else if (key == "mass_Be")
+        {
+            p1.mb = value;
         }
         else if (key == "kb")
         {
             p1.kb = value;
+        }
+            else if (key == "E0")
+        {
+            p1.E0 = value;
         }
         else if (key == "epsilon")
         {
@@ -176,6 +188,23 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             p1.sigma = value;
         } 
+        else if (key == "s0")
+        {
+            p1.s0 = value;
+        } 
+        else if (key == "ps0")
+        {
+            p1.ps0 = value;
+        }
+        else if (key == "Q")
+        {
+            p1.Q = value;
+        }
+        else if (key == "H0")
+        {
+            p1.H0 = value;
+        }
+
     }
 
     // culculate steps and transpose to int
@@ -204,7 +233,6 @@ void read2(const FileName &filename, parameter2 &pr2_WW, parameter2 &pr2_BB, par
 
     std::string line;
 
-    // 先清零（可选）
     auto reset_abop = [](parameter2 &p)
     {
         p.D0 = 0.0;

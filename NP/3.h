@@ -97,7 +97,7 @@ struct FileName
 
 struct parameter1
 {
-    double dt, epsilon, kb, T, sigma, mw, mb, endtime;
+    double dt, epsilon, kb, T, TT, sigma, mw, mb, endtime;
     double s0,ps0, xi, Q;
     double E0,H0;
     int g;

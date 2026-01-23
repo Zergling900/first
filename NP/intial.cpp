@@ -14,7 +14,7 @@ std::mt19937 global_eng(std::random_device{}());
 void RandomV0(Data &data, parameter1 &pr1)
 {   
     //double m = pr1.mb0;
-    double T = pr1.T;
+    double T = pr1.TT;
     double kb = pr1.kb;
     double sigamaW =  pr1.s0 * std::sqrt(T * kb * pr1.mw); // maxwell-boltzmann(W)
     double sigamaBe = pr1.s0 * std::sqrt(T * kb * pr1.mb); // maxwell-boltzmann(Be)

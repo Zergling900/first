@@ -1,9 +1,9 @@
-data_file_name         Data/BCC.W.3.0.md3
+data_file_name         Data/BCC.W.8.0.md3
 
 n                      0
 time                   0.0
 energy                 0.0
-Box_Ln                 3.0
+Box_Ln                 8.0
 Box_Lx                 0.0
 Box_Ly                 0.0
 Box_Lz                 0.0

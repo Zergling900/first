@@ -1,11 +1,12 @@
 #include <iostream>
+#include <chrono>//time
 
 #include "3.h"
 #include "void.h"
 
 int main()
 {
-
+    auto t0 = std::chrono::high_resolution_clock::now();//time
     FileName filename;
     Data data;
     parameter1 pr1;
@@ -72,12 +73,12 @@ int main()
         BeW_evolution1(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
         
         // energy(data, pr1, U_atom); in evolution
-/*
+
         if ((i+1) % pr1.steps_space == 0)
         {
             OutputData(data, filename, pr1);
         }
-*/
+
         if ((i+1) % (pr1.steps_space/10) == 0)
         {
             OutputEnergy(data, filename, pr1);
@@ -85,6 +86,12 @@ int main()
         //data.t += pr1.dt;
     }
     //***********************************************************
+    //time
+    auto t1 = std::chrono::high_resolution_clock::now();
 
+    double ms =
+    std::chrono::duration<double, std::milli>(t1 - t0).count();
+    std::cout << "time = " << ms << " ms\n";
+    
     return 0;
 }

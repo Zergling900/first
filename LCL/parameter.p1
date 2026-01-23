@@ -1,11 +1,19 @@
 # ===== System =====
-dt = 10.0e-03 #fs
-endtime = 50.0 #fs
-steps_space = 0.5 #fs
-s = 1.0
+dt = 50.0e-03 #fs,it is s*dt
+endtime = 2.0 #fs
+steps_space_fs = 0.5 #fs
 
-T = 300 #K
-kb = 8.6173332622e-05 #Å + eV + amu + fs
+
+s0 = 1.0
+ps0 = 0.0
+H0 = 0.0
+Q = 1.0e3
+
+T = 300 #K target temperature
+TT = 200 #K initial temperature
+
+E0 = 103.642696 #(aum*Å^2/fs^2 = eV) -> (aum*Å^2/fs^2) *E0 = eV
+kb = 8.6173332622e-05 #eV/K  (kb/E0 = 1/K)
 mass_W = 183.84
 mass_Be = 9.012 #amu
 

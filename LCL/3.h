@@ -79,22 +79,23 @@ struct Atom
     Matrix31 p;                     //momentum
     Matrix31 f;                     //force
 };
+
 struct Cell_List
 {
+    int Mx,My,Mz;
     double Wx,Wy,Wz;
-    int Mx,My,Mz,cell_num;
-    std::vector<int> cell;      //N
-    std::vector<int> num_in_cell;  //M number of particles in each cell
-    std::vector<int> cell_offset;  // The starting point of cell[i] in [atom_indices]
-    std::vector<int> atom_indices; // Install the particle IDs in segments into cells
-    std::vector<int> atom_order;   // Local order of particle[i] within its cell
+    int cell_num;
+    std::vector<int> Cell;
+    std::vector<int> cell_offset;
+    std::vector<int> atom_indices;
 };
+
 struct Data
 {
     int n;                              // number of atoms
-    double t,T,E;                           // unknown
+    double t,T,E,H,s0,ps0;                           // unknown
     double U_all,K_all,f_all;                           // energy
-    Matrix31 F_all;
+    Matrix31 F_all,P_all;
     Matrix33 Box;
     std::vector<Atom> atoms;                       //momentum
 };
@@ -107,7 +108,10 @@ struct FileName
 
 struct parameter1
 {
-    double dt, epsilon, kb, T, sigma, m, endtime;
+    double dt, epsilon, kb, T, TT, sigma, mw, mb, endtime;
+    double s0,ps0, xi, Q;
+    double E0,H0;
+    int g;
     int steps,steps_space;
 };
 

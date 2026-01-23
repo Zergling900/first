@@ -160,6 +160,10 @@ void read1(const FileName &filename, parameter1 &p1)
         {
             p1.T = value;
         }
+        else if (key == "TT")
+        {
+            p1.TT = value;
+        }
         else if (key == "mass_W")
         {
             p1.mw = value;
