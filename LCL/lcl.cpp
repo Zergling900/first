@@ -9,9 +9,21 @@
 void lcl0(Data &data, Cell_List &cl, const parameter1 &pr1, const parameter2 &pr2)
 {
     int n = data.n;
-    cl.Mx = floor(data.Box.a00 / (pr2.R + pr2.D));
-    cl.My = floor(data.Box.a11 / (pr2.R + pr2.D));
-    cl.Mz = floor(data.Box.a22 / (pr2.R + pr2.D));
+    double cutoff = pr2.R + pr2.D;
+    if (cutoff <= 0.0 || data.Box.a00 <= 0.0 || data.Box.a11 <= 0.0 || data.Box.a22 <= 0.0)
+    {
+        std::cerr << "[lcl0] Invalid box or cutoff (R+D).\n";
+        cl = Cell_List{};
+        return;
+    }
+
+    cl.Mx = static_cast<int>(std::floor(data.Box.a00 / cutoff));
+    cl.My = static_cast<int>(std::floor(data.Box.a11 / cutoff));
+    cl.Mz = static_cast<int>(std::floor(data.Box.a22 / cutoff));
+
+    if (cl.Mx < 1) cl.Mx = 1;
+    if (cl.My < 1) cl.My = 1;
+    if (cl.Mz < 1) cl.Mz = 1;
 
     cl.Wx = (data.Box.a00 / cl.Mx);
     cl.Wy = (data.Box.a11 / cl.My);
@@ -27,6 +39,12 @@ void lcl0(Data &data, Cell_List &cl, const parameter1 &pr1, const parameter2 &pr
 void lcl1(Data &data, Cell_List &cl, const parameter1 &pr1, const parameter2 &pr2, vector<double> &U_atom)
 {
     int n = data.n;
+    if (cl.cell_num <= 0 || cl.Mx <= 0 || cl.My <= 0 || cl.Mz <= 0)
+    {
+        std::cerr << "[lcl1] Invalid cell list.\n";
+        return;
+    }
+
     double Wx = cl.Wx;
     double Wy = cl.Wy;
     double Wz = cl.Wz;
@@ -35,13 +53,26 @@ void lcl1(Data &data, Cell_List &cl, const parameter1 &pr1, const parameter2 &pr
     int My = cl.My;
     int Mz = cl.Mz;
 
+    auto wrap_index = [](int idx, int m)
+    {
+        if (m <= 0)
+            return 0;
+        idx %= m;
+        if (idx < 0)
+            idx += m;
+        return idx;
+    };
+
     std::vector<int> num_in_cell(cl.cell_num, 0);
 
     for (int i = 0; i < n; i++)
     {
-        int mx = floor(data.atoms[i].r.a00 / Wx);
-        int my = floor(data.atoms[i].r.a10 / Wy);
-        int mz = floor(data.atoms[i].r.a20 / Wz);
+        int mx = static_cast<int>(std::floor(data.atoms[i].r.a00 / Wx));
+        int my = static_cast<int>(std::floor(data.atoms[i].r.a10 / Wy));
+        int mz = static_cast<int>(std::floor(data.atoms[i].r.a20 / Wz));
+        mx = wrap_index(mx, Mx);
+        my = wrap_index(my, My);
+        mz = wrap_index(mz, Mz);
         cl.Cell[i] = mx + my * Mx + mz * Mx * My; // m is particle index,M is the number of cells
         num_in_cell[cl.Cell[i]]++;
     }
@@ -111,6 +142,11 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
     int Mx = cl.Mx;
     int My = cl.My;
     int Mz = cl.Mz;
+    if (cl.cell_num <= 0 || Mx <= 0 || My <= 0 || Mz <= 0)
+    {
+        std::cerr << "[lcl2] Invalid cell list.\n";
+        return;
+    }
 
     data.F_all = Matrix31(0.0, 0.0, 0.0);
     for (int i = 0; i < n; i++)
@@ -192,21 +228,9 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
             {
                 for (int dcx = -1; dcx <= 1; dcx++)
                 {
-                    int cz2 = cz_i + dcz;
-                    int cy2 = cy_i + dcy;
-                    int cx2 = cx_i + dcx;
-
-                    // CELL PBC
-                    /*
-                                        if (cx2 < 0) cx2 += Mx;
-                                        else if (cx2 >= Mx) cx2 -= Mx;
-
-                                        if (cy2 < 0) cy2 += My;
-                                        else if (cy2 >= My) cy2 -= My;
-
-                                        if (cz2 < 0) cz2 += Mz;
-                                        else if (cz2 >= Mz) cz2 -= Mz;
-                    */
+                    int cz2 = wrap_cell(cz_i + dcz, Mz);
+                    int cy2 = wrap_cell(cy_i + dcy, My);
+                    int cx2 = wrap_cell(cx_i + dcx, Mx);
                     int nc = cx2 + cy2 * Mx + cz2 * Mx * My;
 
                     int begin = cl.cell_offset[nc];

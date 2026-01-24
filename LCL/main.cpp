@@ -8,26 +8,50 @@
 int main()
 {
     auto t0 = std::chrono::high_resolution_clock::now();
-    FileName filename;
-    Data data;
-    Cell_List cl;
-    parameter1 pr1;
-    parameter2 pr2_WW, pr2_BB, pr2_WB;
+    FileName filename{};
+    Data data{};
+    Cell_List cl{};
+    parameter1 pr1{};
+    parameter2 pr2_WW{}, pr2_BB{}, pr2_WB{};
     vector<double> U_atom;
 
     // read basic data*******************************************
     cout << "STEP 1: readF\n";
 
     readF("FileName.txt", filename);
+    if (filename.parameter_filename.empty() ||
+        filename.parameter2_filename.empty() ||
+        filename.BasicData_filename.empty() ||
+        filename.Data_filename.empty() ||
+        filename.Et_file.empty())
+    {
+        std::cerr << "Missing entries in FileName.txt or file not found. Check working directory.\n";
+        return 1;
+    }
 
     cout << "STEP 2: read0\n";
     read0(filename, data);
+    if (data.n <= 0 || data.atoms.size() != static_cast<size_t>(data.n))
+    {
+        std::cerr << "Basic data not loaded; check " << filename.BasicData_filename << ".\n";
+        return 1;
+    }
 
     cout << "STEP 3: read1\n";
     read1(filename, pr1);
+    if (pr1.dt <= 0.0)
+    {
+        std::cerr << "Invalid parameter1; check " << filename.parameter_filename << ".\n";
+        return 1;
+    }
 
     cout << "STEP 4: read2\n";
     read2(filename, pr2_WW, pr2_BB, pr2_WB);
+    if (pr2_WW.R <= 0.0 && pr2_BB.R <= 0.0 && pr2_WB.R <= 0.0)
+    {
+        std::cerr << "Invalid parameter2; check " << filename.parameter2_filename << ".\n";
+        return 1;
+    }
 
     cout << "STEP 4: InitEnergyFile\n";
     InitEnergyFile(filename);
@@ -81,18 +105,19 @@ int main()
         BeW_evolution1(pr1, pr2_WW, pr2_BB, pr2_WB, data, cl, U_atom);
         
         // energy(data, pr1, U_atom); in evolution
-
+/*
         if ((i+1) % pr1.steps_space == 0)
         {
             OutputData(data, filename, pr1);
         }
-
+*/
         if ((i+1) % (pr1.steps_space/10) == 0)
         {
             OutputEnergy(data, filename, pr1);
         }
         //data.t += pr1.dt;
     }
+
     //***********************************************************
     auto t1 = std::chrono::high_resolution_clock::now();
 
