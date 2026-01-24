@@ -1,13 +1,13 @@
 # ===== System =====
 dt = 50.0e-03 #fs,it is s*dt
-endtime = 10000.0 #fs
+endtime = 2000.0 #fs
 steps_space_fs = 0.5 #fs
 
 
 s0 = 1.0
 ps0 = 0.0
 H0 = 0.0
-Q = 1.0e3
+Q = 5.0e2
 
 T = 300 #K target temperature
 TT = 200 #K initial temperature

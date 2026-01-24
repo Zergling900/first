@@ -61,8 +61,10 @@ void RandomV0(Data &data, parameter1 &pr1)
         data.atoms[i].p = data.atoms[i].p - p_cm;
     }
 
-    
+
     pr1.g = 3 * data.n - 3;
+
+    //pr1.g = 3 * data.n;
     data.s0 = pr1.s0;
     data.ps0 = pr1.ps0;
 }

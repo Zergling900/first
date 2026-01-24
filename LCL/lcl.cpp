@@ -198,9 +198,9 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
                     int begin = cl.cell_offset[nc];
                     int end = cl.cell_offset[nc + 1];
 
-                    for (int kb = begin; kb < end; kb++)
+                    for (int iii = begin; iii < end; iii++)
                     {
-                        int pid = cl.atom_indices[kb];
+                        int pid = cl.atom_indices[iii];
                         func(pid);
                     }
                 }
