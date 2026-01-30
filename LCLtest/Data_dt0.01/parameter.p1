@@ -1,6 +1,6 @@
 # ===== System =====
-dt = 50.0e-03 #fs,it is s*dt
-endtime = 2000.0 #fs
+dt = 10.0e-03 #fs,it is s*dt
+endtime = 500.0 #fs
 steps_space_fs = 0.5 #fs
 
 

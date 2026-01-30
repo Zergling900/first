@@ -2,6 +2,7 @@
 #include <random>
 #include <cmath>
 #include <vector>
+#include <omp.h>
 
 #include "3.h"
 #include "void.h"
@@ -211,6 +212,7 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
     // ---------------------------------------------
     // main loops
     // ---------------------------------------------
+    #pragma omp parallel for schedule(guided, 32)
     for (int i = 0; i < n; i++)
     {
         const Atom &ai = data.atoms[i];
@@ -322,6 +324,7 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
 
                         // Cutoff fc_ij and derivative
                         double fcij, nfcij;
+/*
                         if (rij <= (R - D))
                         {
                             fcij = 1.0;
@@ -338,6 +341,13 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
                             fcij = 0.5 - 0.5 * std::sin(x);
                             nfcij = -0.5 * std::cos(x) * (0.5 * M_PI / D);
                         }
+*/
+
+                        double inside = (rij > (R - D)) && (rij < (R + D));
+                        double below = (rij <= (R - D)); double above = (rij >= (R + D));
+                        double x = 0.5 * M_PI * (rij - R) / D;
+                        fcij = below * 1.0 + inside * (0.5 - 0.5 * sin(x)) + above * 0.0;
+                        nfcij = inside * (-0.5 * cos(x) * (0.5 * M_PI / D));
 
                         if (fcij == 0.0)
                         {
