@@ -1,0 +1,24 @@
+parameter                           parameter.p1
+parameter2                          parameter.p2
+//BCC
+
+First_Data_file                             BasicData/BCC.W.8.0.md3
+//First_Data_file                             BasicData/BCC.md3
+Data_file                                   Data/BCC.00.md3
+Et_file                                     Data/BCC.Et.00.md3
+
+//***************************************************************************
+
+//FCC
+
+//First_Data_file                           BasicData/FCC.md3
+//Data_file                                 Data/FCC.00.md3
+//Et_file                                   Data/FCC.Et.00.md3
+
+//***************************************************************************
+
+//Diamond
+
+//First_Data_file                           BasicData/Diamond.md3
+//Data_file                                 Data/Diamond.00.md3
+//Et_file                                   Data/Diamond.Et.00.md3

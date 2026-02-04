@@ -25,6 +25,26 @@ struct BasicData
     double _cell_angle_alpha, _cell_angle_beta, _cell_angle_gamma; //unit cell angle
     //double axx,axy,axz,ayx,ayy,ayz,aza,azy,azz;    //
     double randommultiplier;//
+
+    // region control (unit-cell index range, inclusive)
+    int use_region; // 0 = full box, 1 = use region_ix/iy/iz ranges
+    int region_ix_min, region_ix_max;
+    int region_iy_min, region_iy_max;
+    int region_iz_min, region_iz_max;
+    int region_in_box; // 0 = region in lattice index space, 1 = region in BOX fraction space
+
+    // orientation control (align [h k l] to +Z, 0 = disabled)
+    int use_orientation;
+    int orient_h, orient_k, orient_l;
+    int orientation_keep_box; // 1 = keep BOX unrotated, clip points into it
+    int auto_cover_box; // 1 = auto-expand ix/iy/iz to cover fixed BOX
+
+    // shape control (filtering)
+    string shape_type; // box, pyramid, cone, sphere, cylinder, bump
+    double bump_base_ratio; // 0~1
+    double bump_rx;         // 0~1, centered width ratio in x
+    double bump_ry;         // 0~1, centered width ratio in y
+    double bump_mode;       // -1~1, concave to convex
 };
 //----------------------------------------
 //  _atom_site_type_symbol
@@ -131,6 +151,7 @@ struct Data
 Matrix33 CellVector_L0(const BasicData &data);
 Matrix33 CellVector_A(const BasicData &data);
 Matrix33 CellVector_C(const Matrix33 &Cell_L0, const Matrix33 &Cell_A);
+Matrix33 ApplyOrientation(const BasicData &data, const Matrix33 &Cell);
 // Vector3d random(const BasicData &data,const Matrix33 &Cell);
 
 void read1(BasicData &data, vector<Atom> &atoms);
@@ -141,10 +162,10 @@ void build( const vector<Atom> &atoms,
 void calculate(int &n,
                const BasicData &data,
                const Matrix33 &Cell,
-               const Matrix33 &Cell_L0,
+               const Matrix33 &BoxCell,
                const vector<Data> &datas,
                vector<Data> &output);
 
 void Output(const int &n, const BasicData &data,
-                vector<Data> &output,const Matrix33 &Cell_L0,
-                const Matrix33 &Cell,const string &filename);
+                vector<Data> &output,
+                const Matrix33 &BoxCell,const string &filename);

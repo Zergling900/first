@@ -1,0 +1,23 @@
+Memo: (hkl) orientation vs [h k l] direction
+
+Summary
+- The current rotation aligns the real-space direction v = h*a + k*b + l*c to +Z.
+- This is correct for cubic/orthogonal cells (a,b,c are perpendicular).
+- For a general (skewed) cell, the plane (hkl) normal is NOT parallel to (h,k,l) in real space.
+
+Crystal-plane normal (general case)
+- The true normal of plane (hkl) is a reciprocal-lattice vector:
+  n ∝ h*a* + k*b* + l*c*
+- a*, b*, c* are reciprocal basis vectors of the real-space cell.
+- Only in orthogonal cells do a* || a, b* || b, c* || c.
+
+Why it matters
+- If the cell is non-orthogonal, aligning Cell*[h k l] to +Z will NOT make the (hkl) plane perpendicular to +Z.
+- For correct (hkl) alignment in a general cell, compute the reciprocal lattice and align n to +Z.
+
+If needed later
+- Use reciprocal lattice:
+  a* = (b x c) / (a · (b x c))
+  b* = (c x a) / (a · (b x c))
+  c* = (a x b) / (a · (b x c))
+- Then n = h*a* + k*b* + l*c*, and rotate n to +Z.

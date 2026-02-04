@@ -1,12 +1,66 @@
-data_file_name         Data/BCC.W.8.0.md3
+data_file_name         Data/BCC.W.test1.md3
 
 n                      0
 time                   0.0
 energy                 0.0
 Box_Ln                 8.0
-Box_Lx                 0.0
-Box_Ly                 0.0
-Box_Lz                 0.0
+// If Box_Lx/y/z > 0, use them instead of Box_Ln for each axis.
+Box_Lx                 12.0
+Box_Ly                 12.0
+Box_Lz                 40.0
+
+// region control (unit-cell index range, inclusive)
+// use_region 0 => full box (default)
+// use_region 1 => only generate in [region_ix_min, region_ix_max] x[region_iy_min, region_iy_max] x[region_iz_min, region_iz_max]
+use_region            1
+
+region_ix_min         4
+region_ix_max         8
+region_iy_min         4
+region_iy_max         8
+region_iz_min         1
+region_iz_max         21
+// region_in_box 0 => region is in lattice index space (default, old behavior)
+// region_in_box 1 => region is in fixed BOX fraction space (recommended with orientation_keep_box=1)
+region_in_box         1
+
+// orientation (align [h k l] to +Z), example: 001 or 111
+// use_orientation 0 => no rotation (default)
+// use_orientation 1 => rotate so that vector [orient_h orient_k orient_l] points to +Z
+use_orientation        1
+orient_h               1
+orient_k               1
+orient_l               0
+
+// keep BOX unrotated while rotating lattice; points outside BOX will be clipped
+// 0 => rotate BOX with lattice (default)
+// 1 => keep BOX fixed (no rotation)
+orientation_keep_box   1
+// auto-expand ix/iy/iz ranges to cover fixed BOX (ignores use_region when enabled)
+// 0 => use normal range / use_region (default)
+// 1 => compute ranges from BOX corners in rotated lattice
+auto_cover_box         1
+
+//*******************************************************************
+// shape control: box | pyramid | cone | sphere | cylinder | bump
+//*******************************************************************
+
+// box: full box (default)
+// pyramid: rectangular base at z_min, apex at z_max
+// cone: circular base at z_min, apex at z_max
+// sphere: lowest point at z_min, highest at z_max
+// cylinder: circular base at z_min, height to z_max
+// bump: base to base_ratio*height, with centered concave/convex region
+shape_type             bump
+
+// bump settings (only used when shape_type = bump)
+// base height = z_min + bump_base_ratio * (z_max - z_min)
+// center region width ratio in x/y: bump_rx, bump_ry (0~1)
+// bump_mode in [-1, 1]: -1 concave to z_min, 0 flat, 1 convex to z_max
+bump_base_ratio        0.2
+bump_rx                0.5
+bump_ry                0.5
+bump_mode              0.3
 
 //basic(or not) lattice constant
 //ax                  0.0 0.0 0.0

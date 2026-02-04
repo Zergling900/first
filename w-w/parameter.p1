@@ -1,0 +1,23 @@
+# ===== System =====
+dt = 50.0e-03 #fs,it is s*dt
+endtime = 2000.0 #fs(2000:4Wsteps,500:1Wsteps,50:1ksteps)
+steps_space_fs = 0.5 #fs
+
+
+s0 = 1.0
+ps0 = 0.0
+H0 = 0.0
+Q = 1.0e3
+
+T = 300 #K target temperature
+TT = 150 #K initial temperature
+
+E0 = 103.642696 #(aum*Å^2/fs^2 = eV) -> (aum*Å^2/fs^2) *E0 = eV
+kb = 8.6173332622e-05 #eV/K  (kb/E0 = 1/K)
+mass_W = 183.84
+mass_Be = 9.012 #amu
+
+# ===== LJ =====
+mass_Ar = 39.948 #amu
+epsilon = 120 #epsilon/kb
+sigma = 2.44 # 2.44?
