@@ -166,6 +166,72 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
     double Lyh = Ly / 2.0;
     double Lzh = Lz / 2.0;
 
+    // Map species strings to small integer tags once per step.
+    // 0 = W, 1 = Be, 2 = unknown (fallback to mixed pair parameters).
+    std::vector<unsigned char> atom_type(n, 2);
+    for (int i = 0; i < n; ++i)
+    {
+        const std::string &name = data.atoms[i].name;
+        atom_type[i] = (name == "W") ? 0 : ((name == "Be") ? 1 : 2);
+    }
+
+    struct PairCache
+    {
+        double D0;
+        double R;
+        double D;
+        double mu;
+        double r0;
+        double gamma;
+        double h_ang;
+
+        double aR;
+        double aA;
+        double bsR;
+        double bsA;
+
+        double R_minus_D2;
+        double R_plus_D2;
+        double half_pi_over_D;
+
+        double c_ang2;
+        double d_ang2;
+        double inv_d_ang2;
+    };
+
+    auto make_cache = [](const parameter2 &p) -> PairCache
+    {
+        PairCache c{};
+        c.D0 = p.D0;
+        c.R = p.R;
+        c.D = p.D;
+        c.mu = p.mu;
+        c.r0 = p.r0;
+        c.gamma = p.gamma;
+        c.h_ang = p.h;
+
+        const double inv_S_minus_1 = 1.0 / (p.S - 1.0);
+        c.aR = p.D0 * inv_S_minus_1;
+        c.aA = p.S * p.D0 * inv_S_minus_1;
+        c.bsR = p.beta * std::sqrt(2.0 * p.S);
+        c.bsA = p.beta * std::sqrt(2.0 / p.S);
+
+        const double R_minus_D = p.R - p.D;
+        const double R_plus_D = p.R + p.D;
+        c.R_minus_D2 = R_minus_D * R_minus_D;
+        c.R_plus_D2 = R_plus_D * R_plus_D;
+        c.half_pi_over_D = (p.D != 0.0) ? (0.5 * M_PI / p.D) : 0.0;
+
+        c.c_ang2 = p.c * p.c;
+        c.d_ang2 = p.d * p.d;
+        c.inv_d_ang2 = (c.d_ang2 != 0.0) ? (1.0 / c.d_ang2) : 0.0;
+        return c;
+    };
+
+    const PairCache cache_WW = make_cache(pr2_WW);
+    const PairCache cache_BB = make_cache(pr2_BB);
+    const PairCache cache_WB = make_cache(pr2_WB);
+
     // ---------------------------------------------
     // tools: cell wrap + iterate 27-cell neighbors
     // ---------------------------------------------
@@ -251,363 +317,377 @@ void lcl2(Data &data, Cell_List &cl, const parameter1 &pr1,
         for (int i = 0; i < n; i++)
         {
             const Atom &ai = data.atoms[i];
-            const std::string &ni = ai.name;
+            const unsigned char type_i = atom_type[i];
 
             int c_i = cl.Cell[i];
             int cz_i = c_i / (Mx * My);
             int cc_i = c_i - cz_i * (Mx * My); // just a number
             int cy_i = cc_i / Mx;
             int cx_i = cc_i - cy_i * Mx;
-            // #pragma omp parallel for schedule(guided, 32)
-            for (int dcz = -1; dcz <= 1; dcz++)
+
+            // Half-stencil neighbor traversal: one direction only.
+            // This avoids scanning all 27 neighbor cells and then dropping half by j<=i.
+            static const int half_offsets[14][3] = {
+                {0, 0, 0},
+                {1, 0, 0},
+                {-1, 1, 0}, {0, 1, 0}, {1, 1, 0},
+                {-1, -1, 1}, {0, -1, 1}, {1, -1, 1},
+                {-1, 0, 1}, {0, 0, 1}, {1, 0, 1},
+                {-1, 1, 1}, {0, 1, 1}, {1, 1, 1}};
+
+            int neighbor_cells[14];
+            int neighbor_count = 0;
+            for (int h = 0; h < 14; ++h)
             {
-                for (int dcy = -1; dcy <= 1; dcy++)
+                int cz2 = wrap_cell(cz_i + half_offsets[h][2], Mz);
+                int cy2 = wrap_cell(cy_i + half_offsets[h][1], My);
+                int cx2 = wrap_cell(cx_i + half_offsets[h][0], Mx);
+                int nc = cx2 + cy2 * Mx + cz2 * Mx * My;
+
+                // When Mx/My/Mz is small, multiple offsets may wrap to the same cell.
+                bool duplicate = false;
+                for (int t = 0; t < neighbor_count; ++t)
                 {
-                    for (int dcx = -1; dcx <= 1; dcx++)
+                    if (neighbor_cells[t] == nc)
                     {
-                        int cz2 = wrap_cell(cz_i + dcz, Mz);
-                        int cy2 = wrap_cell(cy_i + dcy, My);
-                        int cx2 = wrap_cell(cx_i + dcx, Mx);
-                        int nc = cx2 + cy2 * Mx + cz2 * Mx * My;
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate)
+                {
+                    neighbor_cells[neighbor_count++] = nc;
+                }
+            }
 
-                        int begin = cl.cell_offset[nc];
-                        int end = cl.cell_offset[nc + 1];
+            for (int h = 0; h < neighbor_count; ++h)
+            {
+                int nc = neighbor_cells[h];
+                const bool same_cell = (nc == c_i);
 
-                        for (int jj = begin; jj < end; jj++)
+                int begin = cl.cell_offset[nc];
+                int end = cl.cell_offset[nc + 1];
+
+                for (int jj = begin; jj < end; jj++)
+                {
+                    int j = cl.atom_indices[jj];
+                    if (same_cell && j <= i)
+                    {
+                        continue;
+                    }
+
+                    const Atom &aj = data.atoms[j];
+                    const unsigned char type_j = atom_type[j];
+
+                    const PairCache *cache = &cache_WB;
+                    if (type_i == 0 && type_j == 0)
+                    {
+                        cache = &cache_WW;
+                    }
+                    else if (type_i == 1 && type_j == 1)
+                    {
+                        cache = &cache_BB;
+                    }
+
+                    const double mu = cache->mu;
+                    const double r0 = cache->r0;
+                    const double gamma = cache->gamma;
+                    const double h_ang = cache->h_ang;
+
+                    // displacement r_ij = r_j - r_i
+                    Matrix31 drij = aj.r - ai.r;
+
+                    // PBC (real space)
+                    if (drij.a00 < -Lxh)
+                        drij.a00 += Lx;
+                    else if (drij.a00 >= Lxh)
+                        drij.a00 -= Lx;
+
+                    if (drij.a10 < -Lyh)
+                        drij.a10 += Ly;
+                    else if (drij.a10 >= Lyh)
+                        drij.a10 -= Ly;
+
+                    if (drij.a20 < -Lzh)
+                        drij.a20 += Lz;
+                    else if (drij.a20 >= Lzh)
+                        drij.a20 -= Lz;
+
+                    double rij2 = drij.a00 * drij.a00 + drij.a10 * drij.a10 + drij.a20 * drij.a20;
+                    if (rij2 == 0.0)
+                    {
+                        continue;
+                    }
+                    if (rij2 >= cache->R_plus_D2)
+                    {
+                        continue;
+                    }
+
+                    double rij = std::sqrt(rij2);
+                    Matrix31 seij = drij * (1.0 / rij);
+                    Matrix31 drji = seij * (-rij);
+                    double rji = rij;
+                    Matrix31 seji = seij * (-1.0);
+
+                    // Pair VR / VA
+                    const double expR = std::exp(-cache->bsR * (rij - r0));
+                    const double expA = std::exp(-cache->bsA * (rij - r0));
+                    const double VR = cache->aR * expR;
+                    const double VA = cache->aA * expA;
+
+                    // Cutoff fc_ij and derivative
+                    double fcij = 0.0;
+                    double nfcij = 0.0;
+                    if (rij2 <= cache->R_minus_D2)
+                    {
+                        fcij = 1.0;
+                        nfcij = 0.0;
+                    }
+                    else
+                    {
+                        const double x = (rij - cache->R) * cache->half_pi_over_D;
+                        fcij = 0.5 - 0.5 * std::sin(x);
+                        nfcij = -0.5 * std::cos(x) * cache->half_pi_over_D;
+                    }
+
+                    if (fcij == 0.0)
+                    {
+                        continue;
+                    }
+
+                    const double nVR = -cache->bsR * VR;
+                    const double nVA = -cache->bsA * VA;
+
+                    // -------------------------------------------------
+                    // Three-body: build Xij using k in i-neighborhood,
+                    //            build Xji using k in j-neighborhood
+                    // -------------------------------------------------
+                    double Xij = 0.0;
+                    double Xji = 0.0;
+
+                    k_list_ij.clear();
+                    k_list_ji.clear();
+
+                    dXij_dri_list.clear();
+                    dXij_drj_list.clear();
+                    dXij_drk_list.clear();
+
+                    dXji_dri_list.clear();
+                    dXji_drj_list.clear();
+                    dXji_drk_list.clear();
+                    auto accumulate_X_center = [&](int center,
+                                                   const Atom &ac,
+                                                   const Matrix31 &dr_co,
+                                                   const Matrix31 &se_co,
+                                                   double r_co,
+                                                   double &X,
+                                                   std::vector<Matrix31> &dX_dr_center_list,
+                                                   std::vector<Matrix31> &dX_dr_other_list,
+                                                   std::vector<Matrix31> &dX_drk_list,
+                                                   std::vector<int> &k_list)
+                    {
+                        for_each_in_27_cells(center, [&](int k)
                         {
-                            int j = cl.atom_indices[jj];
-                            if (j <= i)
+                            if (k == i || k == j)
                             {
-                                continue;
+                                return;
                             }
 
-                            const Atom &aj = data.atoms[j];
-                            const std::string &nj = aj.name;
+                            const Atom &ak = data.atoms[k];
+                            Matrix31 dr_ck = ak.r - ac.r;
 
-                            // Choose ABOP parameter set based on species of i and j
-                            const parameter2 *p = nullptr;
+                            if (dr_ck.a00 < -Lxh)        dr_ck.a00 += Lx;
+                            else if (dr_ck.a00 >= Lxh)   dr_ck.a00 -= Lx;
 
-                            bool i_is_W = (ni == "W");
-                            bool j_is_W = (nj == "W");
-                            bool i_is_Be = (ni == "Be");
-                            bool j_is_Be = (nj == "Be");
+                            if (dr_ck.a10 < -Lyh)        dr_ck.a10 += Ly;
+                            else if (dr_ck.a10 >= Lyh)   dr_ck.a10 -= Ly;
 
-                            if (i_is_W && j_is_W)
+                            if (dr_ck.a20 < -Lzh)        dr_ck.a20 += Lz;
+                            else if (dr_ck.a20 >= Lzh)   dr_ck.a20 -= Lz;
+
+                            double r_ck2 = dr_ck.a00 * dr_ck.a00
+                                         + dr_ck.a10 * dr_ck.a10
+                                         + dr_ck.a20 * dr_ck.a20;
+                            if (r_ck2 == 0.0)
                             {
-                                p = &pr2_WW;
+                                return;
                             }
-                            else if (i_is_Be && j_is_Be)
+                            if (r_ck2 >= cache->R_plus_D2)
                             {
-                                p = &pr2_BB;
+                                return;
+                            }
+                            double r_ck = std::sqrt(r_ck2);
+
+                            double fc_ck, dfc_dr_ck;
+                            if (r_ck2 <= cache->R_minus_D2)
+                            {
+                                fc_ck = 1.0;
+                                dfc_dr_ck = 0.0;
                             }
                             else
                             {
-                                p = &pr2_WB;
+                                const double xx = (r_ck - cache->R) * cache->half_pi_over_D;
+                                fc_ck = 0.5 - 0.5 * std::sin(xx);
+                                dfc_dr_ck = -0.5 * std::cos(xx) * cache->half_pi_over_D;
                             }
 
-                            double D0 = p->D0;
-                            double R = p->R;
-                            double D = p->D;
-                            double mu = p->mu; // 2mu in paper
-                            double r0 = p->r0;
-                            double beta = p->beta;
-                            double S = p->S;
-                            double gamma = p->gamma;
-
-                            // !!! rename to avoid shadowing cell index c_i / etc.
-                            double c_ang = p->c;
-                            double d_ang = p->d;
-                            double h_ang = p->h;
-
-                            // displacement r_ij = r_j - r_i
-                            Matrix31 drij = aj.r - ai.r;
-
-                            // PBC (real space)
-                            if (drij.a00 < -Lxh)
-                                drij.a00 += Lx;
-                            else if (drij.a00 >= Lxh)
-                                drij.a00 -= Lx;
-
-                            if (drij.a10 < -Lyh)
-                                drij.a10 += Ly;
-                            else if (drij.a10 >= Lyh)
-                                drij.a10 -= Ly;
-
-                            if (drij.a20 < -Lzh)
-                                drij.a20 += Lz;
-                            else if (drij.a20 >= Lzh)
-                                drij.a20 -= Lz;
-
-                            double rij2 = drij.a00 * drij.a00 + drij.a10 * drij.a10 + drij.a20 * drij.a20;
-                            if (rij2 == 0.0)
+                            if (fc_ck <= 0.0)
                             {
-                                continue;
+                                return;
                             }
 
-                            double rij = std::sqrt(rij2);
-                            Matrix31 seij = drij * (1.0 / rij);
-                            Matrix31 drji = seij * (-rij);
-                            double rji = rij;
-                            Matrix31 seji = seij * (-1.0);
+                            Matrix31 se_ck = dr_ck * (1.0 / r_ck);
 
-                            // Pair VR / VA
-                            double bsR = beta * std::sqrt(2.0 * S);
-                            double bsA = beta * std::sqrt(2.0 / S);
+                            double dot_co_ck = dr_co.a00 * dr_ck.a00 + dr_co.a10 * dr_ck.a10 + dr_co.a20 * dr_ck.a20;
+                            double cost_cok = dot_co_ck / (r_co * r_ck);
+                            if (cost_cok > 1.0) cost_cok = 1.0;
+                            if (cost_cok < -1.0) cost_cok = -1.0;
 
-                            double VR = (D0 / (S - 1.0)) * std::exp(-bsR * (rij - r0));
-                            double VA = (S * D0 / (S - 1.0)) * std::exp(-bsA * (rij - r0));
+                            const double hc = h_ang + cost_cok;
+                            const double u_ang = cache->d_ang2 + hc * hc;
+                            const double inv_u_ang = 1.0 / u_ang;
+                            const double g_ck = gamma * (1.0 + cache->c_ang2 * (cache->inv_d_ang2 - inv_u_ang));
+                            const double dg_dcos = gamma * cache->c_ang2 * 2.0 * hc * inv_u_ang * inv_u_ang;
 
-                            // Cutoff fc_ij and derivative
-                            double fcij, nfcij;
+                            double inv_r_co = 1.0 / r_co;
+                            double inv_r_ck = 1.0 / r_ck;
+                            double inv_r_co2 = inv_r_co * inv_r_co;
+                            double inv_r_ck2 = inv_r_ck * inv_r_ck;
+                            double inv_r_co_ck = inv_r_co * inv_r_ck;
 
+                            Matrix31 term_dr_co = dr_co * (dot_co_ck * inv_r_co2);
+                            Matrix31 dcos_ddr_co = (dr_ck - term_dr_co) * inv_r_co_ck;
 
-                            double inside = (rij > (R - D)) && (rij < (R + D));
-                            double below = (rij <= (R - D));
-                            double above = (rij >= (R + D));
-                            double x = 0.5 * M_PI * (rij - R) / D;
-                            fcij = below * 1.0 + inside * (0.5 - 0.5 * sin(x)) + above * 0.0;
-                            nfcij = inside * (-0.5 * cos(x) * (0.5 * M_PI / D));
+                            Matrix31 term_dr_ck = dr_ck * (dot_co_ck * inv_r_ck2);
+                            Matrix31 dcos_ddr_ck = (dr_co - term_dr_ck) * inv_r_co_ck;
 
-                            if (fcij == 0.0)
-                            {
-                                continue;
-                            }
+                            Matrix31 dcos_drc = (dcos_ddr_co + dcos_ddr_ck) * (-1.0);
+                            Matrix31 dcos_dro = dcos_ddr_co;
+                            Matrix31 dcos_drk = dcos_ddr_ck;
 
-                            double nVR = (D0 / (S - 1.0)) * (-bsR) * std::exp(-bsR * (rij - r0));
-                            double nVA = (S * D0 / (S - 1.0)) * (-bsA) * std::exp(-bsA * (rij - r0));
+                            Matrix31 dg_drc = dcos_drc * dg_dcos;
+                            Matrix31 dg_dro = dcos_dro * dg_dcos;
+                            Matrix31 dg_drk = dcos_drk * dg_dcos;
 
-                            // -------------------------------------------------
-                            // Three-body: build Xij using k in i-neighborhood,
-                            //            build Xji using k in j-neighborhood
-                            // -------------------------------------------------
-                            double Xij = 0.0;
-                            double Xji = 0.0;
+                            double e_cok = std::exp(mu * (r_co - r_ck));
 
-                            k_list_ij.clear();
-                            k_list_ji.clear();
+                            Matrix31 dfc_drc = se_ck * (-dfc_dr_ck);
+                            Matrix31 dfc_dro(0.0, 0.0, 0.0);
+                            Matrix31 dfc_drk = se_ck * dfc_dr_ck;
 
-                            dXij_dri_list.clear();
-                            dXij_drj_list.clear();
-                            dXij_drk_list.clear();
+                            Matrix31 de_drc = (se_ck - se_co) * (mu * e_cok);
+                            Matrix31 de_dro = se_co * (mu * e_cok);
+                            Matrix31 de_drk = se_ck * (-mu * e_cok);
 
-                            dXji_dri_list.clear();
-                            dXji_drj_list.clear();
-                            dXji_drk_list.clear();
-                            auto accumulate_X_center = [&](int center,
-                                                           const Atom &ac,
-                                                           const Matrix31 &dr_co,
-                                                           const Matrix31 &se_co,
-                                                           double r_co,
-                                                           double &X,
-                                                           std::vector<Matrix31> &dX_dr_center_list,
-                                                           std::vector<Matrix31> &dX_dr_other_list,
-                                                           std::vector<Matrix31> &dX_drk_list,
-                                                           std::vector<int> &k_list)
-                            {
-                                for_each_in_27_cells(center, [&](int k)
-                                                     {//function:
-                                    if (k == i || k == j)
-                                    {
-                                        return;
-                                    }
+                            Matrix31 dX_drc = dfc_drc * (g_ck * e_cok) + dg_drc * (fc_ck * e_cok) + de_drc * (fc_ck * g_ck);
+                            Matrix31 dX_dro = dfc_dro * (g_ck * e_cok) + dg_dro * (fc_ck * e_cok) + de_dro * (fc_ck * g_ck);
+                            Matrix31 dX_drk = dfc_drk * (g_ck * e_cok) + dg_drk * (fc_ck * e_cok) + de_drk * (fc_ck * g_ck);
+                            X += fc_ck * g_ck * e_cok;
 
-                                    const Atom &ak = data.atoms[k];
-                                    Matrix31 dr_ck = ak.r - ac.r;
-
-                                    if (dr_ck.a00 < -Lxh)        dr_ck.a00 += Lx;
-                                    else if (dr_ck.a00 >= Lxh)   dr_ck.a00 -= Lx;
-
-                                    if (dr_ck.a10 < -Lyh)        dr_ck.a10 += Ly;
-                                    else if (dr_ck.a10 >= Lyh)   dr_ck.a10 -= Ly;
-
-                                    if (dr_ck.a20 < -Lzh)        dr_ck.a20 += Lz;
-                                    else if (dr_ck.a20 >= Lzh)   dr_ck.a20 -= Lz;
-
-                                    double r_ck2 = dr_ck.a00 * dr_ck.a00
-                                                 + dr_ck.a10 * dr_ck.a10
-                                                 + dr_ck.a20 * dr_ck.a20;
-                                    if (r_ck2 == 0.0)
-                                    {
-                                        return;
-                                    }
-                                    double r_ck = std::sqrt(r_ck2);
-
-                                    double fc_ck, dfc_dr_ck;
-                                    if (r_ck <= R - D)
-                                    {
-                                        fc_ck = 1.0;
-                                        dfc_dr_ck = 0.0;
-                                    }
-                                    else if (r_ck >= R + D)
-                                    {
-                                        fc_ck = 0.0;
-                                        dfc_dr_ck = 0.0;
-                                    }
-                                    else
-                                    {
-                                        double xx = 0.5 * M_PI * (r_ck - R) / D;
-                                        fc_ck = 0.5 - 0.5 * std::sin(xx);
-                                        dfc_dr_ck = -0.5 * std::cos(xx) * (0.5 * M_PI / D);
-                                    }
-
-                                    if (fc_ck <= 0.0)
-                                    {
-                                        return;
-                                    }
-
-                                    Matrix31 se_ck = dr_ck * (1.0 / r_ck);
-
-                                    double dot_co_ck = dr_co.a00 * dr_ck.a00 + dr_co.a10 * dr_ck.a10 + dr_co.a20 * dr_ck.a20;
-                                    double cost_cok = dot_co_ck / (r_co * r_ck);
-                                    if (cost_cok > 1.0) cost_cok = 1.0;
-                                    if (cost_cok < -1.0) cost_cok = -1.0;
-
-                                    double u_ang = d_ang * d_ang + (h_ang + cost_cok) * (h_ang + cost_cok);
-                                    double g_ck = gamma * (1.0 + c_ang * c_ang * (1.0 / (d_ang * d_ang) - 1.0 / u_ang));
-                                    double dg_dcos = gamma * c_ang * c_ang * 2.0 * (h_ang + cost_cok) / (u_ang * u_ang);
-
-                                    double inv_r_co = 1.0 / r_co;
-                                    double inv_r_ck = 1.0 / r_ck;
-                                    double inv_r_co2 = inv_r_co * inv_r_co;
-                                    double inv_r_ck2 = inv_r_ck * inv_r_ck;
-                                    double inv_r_co_ck = inv_r_co * inv_r_ck;
-
-                                    Matrix31 term_dr_co = dr_co * (dot_co_ck * inv_r_co2);
-                                    Matrix31 dcos_ddr_co = (dr_ck - term_dr_co) * inv_r_co_ck;
-
-                                    Matrix31 term_dr_ck = dr_ck * (dot_co_ck * inv_r_ck2);
-                                    Matrix31 dcos_ddr_ck = (dr_co - term_dr_ck) * inv_r_co_ck;
-
-                                    Matrix31 dcos_drc = (dcos_ddr_co + dcos_ddr_ck) * (-1.0);
-                                    Matrix31 dcos_dro = dcos_ddr_co;
-                                    Matrix31 dcos_drk = dcos_ddr_ck;
-
-                                    Matrix31 dg_drc = dcos_drc * dg_dcos;
-                                    Matrix31 dg_dro = dcos_dro * dg_dcos;
-                                    Matrix31 dg_drk = dcos_drk * dg_dcos;
-
-                                    double e_cok = std::exp(mu * (r_co - r_ck));
-
-                                    Matrix31 dfc_drc = se_ck * (-dfc_dr_ck);
-                                    Matrix31 dfc_dro(0.0, 0.0, 0.0);
-                                    Matrix31 dfc_drk = se_ck * dfc_dr_ck;
-
-                                    Matrix31 de_drc = (se_ck - se_co) * (mu * e_cok);
-                                    Matrix31 de_dro = se_co * (mu * e_cok);
-                                    Matrix31 de_drk = se_ck * (-mu * e_cok);
-
-                                    Matrix31 dX_drc = dfc_drc * (g_ck * e_cok) + dg_drc * (fc_ck * e_cok) + de_drc * (fc_ck * g_ck);
-                                    Matrix31 dX_dro = dfc_dro * (g_ck * e_cok) + dg_dro * (fc_ck * e_cok) + de_dro * (fc_ck * g_ck);
-                                    Matrix31 dX_drk = dfc_drk * (g_ck * e_cok) + dg_drk * (fc_ck * e_cok) + de_drk * (fc_ck * g_ck);
-                                    X += fc_ck * g_ck * e_cok;
-
-                                    dX_dr_center_list.push_back(dX_drc);
-                                    dX_dr_other_list.push_back(dX_dro);
-                                    dX_drk_list.push_back(dX_drk);
-                                    k_list.push_back(k);
-                                    //function_end
-                                });
-                            };
+                            dX_dr_center_list.push_back(dX_drc);
+                            dX_dr_other_list.push_back(dX_dro);
+                            dX_drk_list.push_back(dX_drk);
+                            k_list.push_back(k);
+                        });
+                    };
 
                             // --------------------
                             // Xij : i-centered
                             // --------------------
-                            accumulate_X_center(i, ai, drij, seij, rij, Xij,
-                                                dXij_dri_list, dXij_drj_list, dXij_drk_list, k_list_ij);
+                    accumulate_X_center(i, ai, drij, seij, rij, Xij,
+                                        dXij_dri_list, dXij_drj_list, dXij_drk_list, k_list_ij);
 
                             // --------------------
                             // Xji : j-centered
                             // --------------------
-                            accumulate_X_center(j, aj, drji, seji, rji, Xji,
-                                                dXji_drj_list, dXji_dri_list, dXji_drk_list, k_list_ji);
+                    accumulate_X_center(j, aj, drji, seji, rji, Xji,
+                                        dXji_drj_list, dXji_dri_list, dXji_drk_list, k_list_ji);
 
                             // bond order terms
-                            double bij = 1.0 / std::sqrt(1.0 + Xij);
-                            double bji = 1.0 / std::sqrt(1.0 + Xji);
-                            double b_sym = 0.5 * (bij + bji);
+                    double bij = 1.0 / std::sqrt(1.0 + Xij);
+                    double bji = 1.0 / std::sqrt(1.0 + Xji);
+                    double b_sym = 0.5 * (bij + bji);
 
-                            double u_pair = fcij * (VR - b_sym * VA);
-                            u[i] += 0.5 * u_pair;
-                            u[j] += 0.5 * u_pair;
+                    double u_pair = fcij * (VR - b_sym * VA);
+                    u[i] += 0.5 * u_pair;
+                    u[j] += 0.5 * u_pair;
 
-                            double denom_ij = std::sqrt(1.0 + Xij) * (1.0 + Xij);
-                            double denom_ji = std::sqrt(1.0 + Xji) * (1.0 + Xji);
+                    double denom_ij = std::sqrt(1.0 + Xij) * (1.0 + Xij);
+                    double denom_ji = std::sqrt(1.0 + Xji) * (1.0 + Xji);
 
-                            double fk_ij = 0.0;
-                            double fk_ji = 0.0;
+                    double fk_ij = 0.0;
+                    double fk_ji = 0.0;
 
-                            if (denom_ij > 0.0)
-                            {
-                                fk_ij = fcij * VA * (0.25 / denom_ij);
-                            }
-                            if (denom_ji > 0.0)
-                            {
-                                fk_ji = fcij * VA * (0.25 / denom_ji);
-                            }
+                    if (denom_ij > 0.0)
+                    {
+                        fk_ij = fcij * VA * (0.25 / denom_ij);
+                    }
+                    if (denom_ji > 0.0)
+                    {
+                        fk_ji = fcij * VA * (0.25 / denom_ji);
+                    }
 
                             // forces from Xij (i-centered)
-                            for (size_t idx = 0; idx < k_list_ij.size(); ++idx)
-                            {
-                                int kk = k_list_ij[idx];
+                    for (size_t idx = 0; idx < k_list_ij.size(); ++idx)
+                    {
+                        int kk = k_list_ij[idx];
 
-                                Matrix31 dXij_dri = dXij_dri_list[idx];
-                                Matrix31 dXij_drj = dXij_drj_list[idx];
-                                Matrix31 dXij_drk = dXij_drk_list[idx];
+                        Matrix31 dXij_dri = dXij_dri_list[idx];
+                        Matrix31 dXij_drj = dXij_drj_list[idx];
+                        Matrix31 dXij_drk = dXij_drk_list[idx];
 
-                                Matrix31 Fi_xyz = dXij_dri * (-fk_ij);
-                                Matrix31 Fj_xyz = dXij_drj * (-fk_ij);
-                                Matrix31 Fk_xyz = dXij_drk * (-fk_ij);
+                        Matrix31 Fi_xyz = dXij_dri * (-fk_ij);
+                        Matrix31 Fj_xyz = dXij_drj * (-fk_ij);
+                        Matrix31 Fk_xyz = dXij_drk * (-fk_ij);
 
-                                fx[i] += Fi_xyz.a00;
-                                fy[i] += Fi_xyz.a10;
-                                fz[i] += Fi_xyz.a20;
+                        fx[i] += Fi_xyz.a00;
+                        fy[i] += Fi_xyz.a10;
+                        fz[i] += Fi_xyz.a20;
 
-                                fx[j] += Fj_xyz.a00;
-                                fy[j] += Fj_xyz.a10;
-                                fz[j] += Fj_xyz.a20;
+                        fx[j] += Fj_xyz.a00;
+                        fy[j] += Fj_xyz.a10;
+                        fz[j] += Fj_xyz.a20;
 
-                                fx[kk] += Fk_xyz.a00;
-                                fy[kk] += Fk_xyz.a10;
-                                fz[kk] += Fk_xyz.a20;
-                            }
+                        fx[kk] += Fk_xyz.a00;
+                        fy[kk] += Fk_xyz.a10;
+                        fz[kk] += Fk_xyz.a20;
+                    }
 
                             // forces from Xji (j-centered)
-                            for (size_t idx = 0; idx < k_list_ji.size(); ++idx)
-                            {
-                                int kk = k_list_ji[idx];
+                    for (size_t idx = 0; idx < k_list_ji.size(); ++idx)
+                    {
+                        int kk = k_list_ji[idx];
 
-                                Matrix31 dXji_dri = dXji_dri_list[idx];
-                                Matrix31 dXji_drj = dXji_drj_list[idx];
-                                Matrix31 dXji_drk = dXji_drk_list[idx];
+                        Matrix31 dXji_dri = dXji_dri_list[idx];
+                        Matrix31 dXji_drj = dXji_drj_list[idx];
+                        Matrix31 dXji_drk = dXji_drk_list[idx];
 
-                                Matrix31 Fi_xyz = dXji_dri * (-fk_ji);
-                                Matrix31 Fj_xyz = dXji_drj * (-fk_ji);
-                                Matrix31 Fk_xyz = dXji_drk * (-fk_ji);
+                        Matrix31 Fi_xyz = dXji_dri * (-fk_ji);
+                        Matrix31 Fj_xyz = dXji_drj * (-fk_ji);
+                        Matrix31 Fk_xyz = dXji_drk * (-fk_ji);
 
-                                fx[i] += Fi_xyz.a00;
-                                fy[i] += Fi_xyz.a10;
-                                fz[i] += Fi_xyz.a20;
+                        fx[i] += Fi_xyz.a00;
+                        fy[i] += Fi_xyz.a10;
+                        fz[i] += Fi_xyz.a20;
 
-                                fx[j] += Fj_xyz.a00;
-                                fy[j] += Fj_xyz.a10;
-                                fz[j] += Fj_xyz.a20;
+                        fx[j] += Fj_xyz.a00;
+                        fy[j] += Fj_xyz.a10;
+                        fz[j] += Fj_xyz.a20;
 
-                                fx[kk] += Fk_xyz.a00;
-                                fy[kk] += Fk_xyz.a10;
-                                fz[kk] += Fk_xyz.a20;
-                            }
-                            // pair (radial) forces from fc, VR, VA
-                            double Fij_scalar = nfcij * (VR - b_sym * VA) + fcij * (nVR - b_sym * nVA);
-
-                            Matrix31 fij_xyz = seij * Fij_scalar;
-                            fx[i] += fij_xyz.a00;
-                            fy[i] += fij_xyz.a10;
-                            fz[i] += fij_xyz.a20;
-                            fx[j] -= fij_xyz.a00;
-                            fy[j] -= fij_xyz.a10;
-                            fz[j] -= fij_xyz.a20;
-                        }
+                        fx[kk] += Fk_xyz.a00;
+                        fy[kk] += Fk_xyz.a10;
+                        fz[kk] += Fk_xyz.a20;
                     }
+                            // pair (radial) forces from fc, VR, VA
+                    double Fij_scalar = nfcij * (VR - b_sym * VA) + fcij * (nVR - b_sym * nVA);
+
+                    Matrix31 fij_xyz = seij * Fij_scalar;
+                    fx[i] += fij_xyz.a00;
+                    fy[i] += fij_xyz.a10;
+                    fz[i] += fij_xyz.a20;
+                    fx[j] -= fij_xyz.a00;
+                    fy[j] -= fij_xyz.a10;
+                    fz[j] -= fij_xyz.a20;
                 }
             }
         }

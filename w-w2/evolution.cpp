@@ -121,8 +121,11 @@ auto t0 = std::chrono::high_resolution_clock::now();
         p2 = p1 + hdt * s1 *(f2);
         data.atoms[i].p = p2;
     }
-    energy(data, pr1, U_atom);
-    u2 = data.U_all;
+    u2 = 0.0;
+    for (int i = 0; i < N; ++i)
+    {
+        u2 += U_atom[i];
+    }
     ps4 = ps3 - hdt * u2;
     //***e***
     s2 = s1 * (1.0 + hdt * ps4 / (2.0 * Q))*(1.0 + hdt * ps4 / (2.0 * Q));

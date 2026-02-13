@@ -2,7 +2,7 @@ parameter                           parameter.p1
 parameter2                          parameter.p2
 //BCC
 
-First_Data_file                             BasicData/BCC.W.8.0.md3
+First_Data_file                             BasicData/BCC.W.test2.md3
 //First_Data_file                             BasicData/BCC.md3
 Data_file                                   Data/BCC.00.md3
 Et_file                                     Data/BCC.Et.00.md3
