@@ -1,0 +1,26 @@
+# ===== Projectile Injection Control (minimal validation version) =====
+# 0 = disabled
+# 1 = enabled
+enable_injection = 0
+
+# Must be exact: W / Be / He
+# Current validation run can use W only; other species are reserved for later extension.
+incident_species = W
+incident_identity = 1
+
+# Schedule
+inject_start_time_fs = 0.0
+inject_interval_fs = 10.0
+inject_max_particles = 0
+inject_batch_size = 1
+
+# Geometry / velocity
+# New particles are placed near the top plane z = z_max - inject_z_margin, then shot toward -z.
+inject_z_margin = 0.5
+inject_x_margin = 0.0
+inject_y_margin = 0.0
+inject_speed = 0.0
+
+# RNG for random x-y spawn positions
+inject_use_fixed_seed = 1
+inject_seed = 123456789

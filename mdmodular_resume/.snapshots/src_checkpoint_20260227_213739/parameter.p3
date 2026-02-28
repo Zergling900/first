@@ -1,0 +1,13 @@
+# Runtime schedule / output control
+extra_steps_max = 400000
+plateau_blocks = 1
+
+# Rotate output files every N temperature updates in heating/cooling.
+output_rotate_every_temp_up = 10
+output_rotate_every_temp_down = 10
+
+# Flush output streams every N write calls.
+output_flush_every_writes = 1024
+
+# Verlet neighbor-list skin distance (Angstrom in current units).
+verlet_skin = 0.50

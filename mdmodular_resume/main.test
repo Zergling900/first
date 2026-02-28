@@ -1,0 +1,138 @@
+#include <iostream>
+#include <chrono>//time
+
+#include "3.h"
+#include "void.h"
+
+
+int main()
+{
+auto t00 = std::chrono::high_resolution_clock::now();
+    FileName filename{};
+    Data data{};
+    Cell_List cl{};
+    parameter1 pr1{};
+    parameter2 pr2_WW{}, pr2_BB{}, pr2_WB{};
+    vector<double> U_atom;
+
+    // read basic data*******************************************
+    cout << "STEP 1: readF\n";
+
+    readF("FileName.txt", filename);
+    if (filename.parameter_filename.empty() ||
+        filename.parameter2_filename.empty() ||
+        filename.BasicData_filename.empty() ||
+        filename.Data_filename.empty() ||
+        filename.Et_file.empty())
+    {
+        std::cerr << "Missing entries in FileName.txt or file not found. Check working directory.\n";
+        return 1;
+    }
+
+    cout << "STEP 2: read0\n";
+    read0(filename, data);
+    if (data.n <= 0 || data.atoms.size() != static_cast<size_t>(data.n))
+    {
+        std::cerr << "Basic data not loaded; check " << filename.BasicData_filename << ".\n";
+        return 1;
+    }
+
+    cout << "STEP 3: read1\n";
+    read1(filename, pr1);
+    if (pr1.dt <= 0.0)
+    {
+        std::cerr << "Invalid parameter1; check " << filename.parameter_filename << ".\n";
+        return 1;
+    }
+
+    cout << "STEP 4: read2\n";
+    read2(filename, pr2_WW, pr2_BB, pr2_WB);
+    if (pr2_WW.R <= 0.0 && pr2_BB.R <= 0.0 && pr2_WB.R <= 0.0)
+    {
+        std::cerr << "Invalid parameter2; check " << filename.parameter2_filename << ".\n";
+        return 1;
+    }
+
+    cout << "STEP 4: InitEnergyFile\n";
+    InitEnergyFile(filename);
+    //***********************************************************
+
+    // initial***************************************************
+    //cout << "STEP 6: RandomV0\n";
+    //***********************************************************
+
+    for(int i=0;i<data.n;i++)
+    {
+        data.atoms[i].r = data.atoms[i].r + Matrix31(0.6,0.6,0.6);
+    }
+
+    // ***********************************************************
+    cout << "STEP 5: Dimensionalless\n";
+    Dimensionalless(data, pr1, pr2_WW, pr2_BB, pr2_WB);
+    cout << "STEP 6: RandomV0\n";
+    IntialData(data, pr1);
+
+    cout << "STEP 7: First_potential\n";
+    //LJ_potential(data, pr1, U_atom);
+    //BeW_potential(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    //BeW_potential2(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+    lcl0(data, cl, pr1, pr2_WW);
+    cout << "STEP 7: lcl0\n";
+    lcl1(data, cl, pr1, pr2_WW, U_atom);
+    cout << "STEP 7: lcl1\n";
+    lcl2(data, cl, pr1, pr2_WW, pr2_BB, pr2_WB, U_atom);
+    cout << "STEP 7: lcl2\n";
+    
+    energy(data, pr1, U_atom);
+
+    pr1.H0 = data.H;
+
+    energy(data, pr1, U_atom);
+
+    OutputData(data, filename, pr1);
+    OutputEnergy(data, filename, pr1);
+    //OutputData(data, filename,pr1);
+    //***********************************************************
+auto t01 = std::chrono::high_resolution_clock::now();
+    // evolution*************************************************
+    cout << "STEP 8: evolution\n";
+    
+    int T_step = pr1.steps / pr1.steps_space;
+    for (int i = 0; i < pr1.steps; i++)
+    {   
+        pr1.T += pr1.dT;
+        data.t += pr1.dt;
+        printf("calculating time = %f,s0 = %8f\n", data.t, data.s0);
+        //LJ_evolution(pr1, data, U_atom);
+        //BeW_evolution(pr1, pr2_WW, pr2_BB, pr2_WB, data, U_atom);
+        BeW_evolution1(pr1, pr2_WW, pr2_BB, pr2_WB, data, cl, U_atom);
+        
+        // energy(data, pr1, U_atom); in evolution
+/*
+        if ((i+1) % pr1.steps_space == 0)
+        {
+            OutputData(data, filename, pr1);
+        }
+*/
+        if ((i+1) % (pr1.steps_space/10) == 0)
+        {
+            OutputEnergy(data, filename, pr1);
+        }
+        //data.t += pr1.dt;
+    }
+
+    //***********************************************************
+    
+    auto t02 = std::chrono::high_resolution_clock::now();
+
+    double ms_all =
+    std::chrono::duration<double, std::milli>(t02 - t00).count();
+    std::cout << "time_all = " << ms_all << " ms\n";
+
+    double ms0 =
+    std::chrono::duration<double, std::milli>(t01 - t00).count();
+    std::cout << "time_intial = " << ms0 << " ms\n";
+    
+    return 0;
+    
+}

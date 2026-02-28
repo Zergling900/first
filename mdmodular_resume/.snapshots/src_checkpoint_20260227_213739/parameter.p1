@@ -1,0 +1,28 @@
+# ===== System =====
+dt = 0.05 #fs,it is s*dt
+endtime = 120000.0 #fs(2000:4Wsteps,500:1Wsteps,50:1ksteps)
+steps_space_fs = 0.5 #fs
+
+
+s0 = 1.0
+ps0 = 0.0
+H0 = 0.0
+Q = 2.0e3
+xi = 0.1 # 1/fs, Langevin friction coefficient used by BeW_evolution2
+T_init = 150 #K initial temperature
+dT = 50 #K one step temperature
+T_end = 4000 #K initial temperature
+T_time = 400 #fs one T keep time
+
+output_Data_time = 200.0 #fs output time
+output_Et_time = 50 #fs output time
+
+E0 = 103.642696 #(aum*Å^2/fs^2 = eV) -> (aum*Å^2/fs^2) *E0 = eV
+kb = 8.6173332622e-05 #eV/K  (kb/E0 = 1/K)
+// mass_W = 183.84 # moved to parameter_BeW_ABOP.pr2 (mass.W)
+// mass_Be = 9.012 # moved to parameter_BeW_ABOP.pr2 (mass.Be)
+
+# ===== LJ =====
+mass_Ar = 39.948 #amu
+epsilon = 120 #epsilon/kb
+sigma = 2.44 # 2.44?
