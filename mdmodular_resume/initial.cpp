@@ -11,7 +11,7 @@
 // random (first molecular)
 std::mt19937 global_eng(std::random_device{}());
 
-void IntialData(Data &data, parameter1 &pr1)
+void InitialData(Data &data, parameter1 &pr1)
 {   
     //double m = pr1.mb0;
     double T = pr1.TT;

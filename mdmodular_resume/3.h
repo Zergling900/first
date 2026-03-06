@@ -172,8 +172,11 @@ struct parameter3
 {
     int extra_steps_max = 400000;
     int plateau_blocks = 1;
-    int output_rotate_every_temp_up = 10;
-    int output_rotate_every_temp_down = 10;
+    double initial_hold_time_fs = 0.0;
+    int enable_cooling = 1;
+    double cooling_dT = -1.0;
+    double cooling_T_end = -1.0;
+    int output_rotate_every_data_frames = 200; // rotate Data/Et after N Data frames per file
     int output_flush_every_writes = 1024;
     double verlet_skin = 0.50; // neighbor-list skin (distance buffer)
 };
@@ -185,6 +188,11 @@ struct parameter4
     double resume_time_fs = -1.0;      // target time in fs when resume_use_target_time=1
     int resume_require_exact_time = 0; // 1: fail if exact ET time not found
     int continue_write_next_index = 1; // 1: write to next xx index instead of overwriting source
+    int resume_action = 0;             // 0: normal continue, 1: slice frame to DataN and run inject-only
+    int prompt_slice_time = 1;         // 1: ask user to input slice time at runtime when resume_action=1
+    double slice_time_fs = -1.0;       // used when prompt_slice_time=0, <0 means last frame
+    int slice_use_nearest_time = 1;    // 1: choose nearest frame/row to requested time, 0: require exact
+    std::string slice_output_prefix = "Data"; // output dir prefix for slice mode: Data1/Data2/...
     std::string force_model = "BeW_ABOP_LCL"; // runtime force dispatch selector
 };
 
@@ -202,10 +210,16 @@ struct parameter5
     double inject_z_margin = 0.5;        // place particles at z = z_max - margin
     double inject_x_margin = 0.0;
     double inject_y_margin = 0.0;
-    double inject_speed = 0.0;           // speed magnitude along -z
+    double inject_energy_keV = 0.0;      // kinetic energy per injected particle (keV)
+    double inject_speed = -1.0;          // legacy speed magnitude along -z (fallback)
+
+    double inject_only_duration_fs = -1.0; // <=0 uses parameter.p1 endtime-derived steps
+    int inject_only_control_temperature = 1; // 1: keep Langevin target T, 0: disable thermostat (xi=0)
+    double inject_only_target_T = -1.0; // <0 keeps resume target T
+    double inject_only_dT = 0.0; // optional target-T drift per T_time block in inject-only mode
 
     int inject_use_fixed_seed = 1;
-    unsigned int inject_seed = 123456789u;
+    long long inject_seed = 123456789;
 };
 
 struct InjectionRuntime

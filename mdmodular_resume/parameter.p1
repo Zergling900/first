@@ -1,28 +1,97 @@
-# ===== System =====
-dt = 0.05 #fs,it is s*dt
-endtime = 10000.0 #fs(2000:4Wsteps,500:1Wsteps,50:1ksteps)
-steps_space_fs = 0.5 #fs
+# ===== P1: System / Temperature Schedule =====
+# ZH: 该文件控制时间步长、目标温度调度、恒温器参数与输出频率。
+# EN: This file controls timestep, target-temperature schedule, thermostat, and output cadence.
+# JA: このファイルは時間刻み、目標温度スケジュール、サーモスタット、出力間隔を設定します。
 
+# --- Time Grid / 时间网格 / 時間グリッド ---
+# ZH: 积分时间步长 (fs)。
+# EN: Integration timestep (fs).
+# JA: 積分の時間刻み (fs)。
+dt = 0.05
 
+# ZH: 运行总时长 (fs)。在切片注入-only模式中可作为默认持续时长回退值。
+# EN: Total run time (fs). In slice inject-only mode, this can be used as fallback duration.
+# JA: 総計算時間 (fs)。スライス注入専用モードでは既定継続時間の代替値になります。
+endtime = 10000.0
+
+# ZH: 历史兼容参数，主循环不直接使用。
+# EN: Legacy compatibility parameter; not directly used by main loop.
+# JA: 互換性のための旧パラメータで、メインループでは直接使用しません。
+steps_space_fs = 0.5
+
+# --- Thermostat Core / 恒温器核心 / サーモスタット基本 ---
+# ZH: Nose 扩展变量初值 s。
+# EN: Initial Nose extended variable s.
+# JA: Nose 拡張変数 s の初期値。
 s0 = 1.0
+
+# ZH: Nose 扩展变量初值 ps。
+# EN: Initial Nose extended variable ps.
+# JA: Nose 拡張変数 ps の初期値。
 ps0 = 0.0
+
+# ZH: 守恒量 H0 初值（程序会在初始化/改温时重算）。
+# EN: Initial conserved quantity H0 (recomputed by program during init/temperature changes).
+# JA: 保存量 H0 の初期値（初期化時や温度変更時に再計算されます）。
 H0 = 0.0
+
+# ZH: Nose 热浴质量参数 Q。
+# EN: Nose thermostat mass parameter Q.
+# JA: Nose サーモスタット質量パラメータ Q。
 Q = 2.0e3
-xi = 0.1 # 1/fs, Langevin friction coefficient used by BeW_evolution2
-T_init = 0 #K initial temperature
-dT = 4000 #K one step temperature
-T_end = 4000 #K initial temperature
-T_time = 10000 #fs one T keep time
 
-output_Data_time = 100.0 #fs output time
-output_Et_time = 10 #fs output time
+# ZH: Langevin 摩擦系数 xi (1/fs)，BeW_evolution2 使用。
+# EN: Langevin friction coefficient xi (1/fs), used by BeW_evolution2.
+# JA: Langevin の摩擦係数 xi (1/fs)。BeW_evolution2 で使用します。
+xi = 0.1
 
-E0 = 103.642696 #(aum*Å^2/fs^2 = eV) -> (aum*Å^2/fs^2) *E0 = eV
-kb = 8.6173332622e-05 #eV/K  (kb/E0 = 1/K)
-// mass_W = 183.84 # moved to parameter_BeW_ABOP.pr2 (mass.W)
-// mass_Be = 9.012 # moved to parameter_BeW_ABOP.pr2 (mass.Be)
+# --- Target Temperature Program / 目标温度程序 / 目標温度プログラム ---
+# ZH: 初始目标温度 (K)。
+# EN: Initial target temperature (K).
+# JA: 初期目標温度 (K)。
+T_init = 150
 
-# ===== LJ =====
-mass_Ar = 39.948 #amu
-epsilon = 120 #epsilon/kb
-sigma = 2.44 # 2.44?
+# ZH: 升温每次增量 (K/每个温度块)。
+# EN: Heating increment per temperature block (K/block).
+# JA: 昇温時の1ブロックあたり温度増分 (K/ブロック)。
+dT = 50
+
+# ZH: 升温上限目标温度 (K)。
+# EN: Upper target temperature for heating (K).
+# JA: 昇温時の上限目標温度 (K)。
+T_end = 4000
+
+# ZH: 每个目标温度保持的时间 (fs)。
+# EN: Hold duration at each target temperature (fs).
+# JA: 各目標温度で保持する時間 (fs)。
+T_time = 400
+
+# --- Output Cadence / 输出频率 / 出力間隔 ---
+# ZH: Data 帧输出时间间隔 (fs)。
+# EN: Data-frame output interval (fs).
+# JA: Data フレーム出力間隔 (fs)。
+output_Data_time = 10.0
+
+# ZH: Et 能量输出时间间隔 (fs)。
+# EN: Et (energy log) output interval (fs).
+# JA: Et（エネルギーログ）出力間隔 (fs)。
+output_Et_time = 10
+
+# --- Unit Constants / 单位常数 / 単位定数 ---
+# ZH: 能量换算系数: (amu*Angstrom^2/fs^2) * E0 = eV。
+# EN: Energy conversion factor: (amu*Angstrom^2/fs^2) * E0 = eV.
+# JA: エネルギー換算係数: (amu*Angstrom^2/fs^2) * E0 = eV。
+E0 = 103.642696
+
+# ZH: 玻尔兹曼常数 (eV/K)。
+# EN: Boltzmann constant (eV/K).
+# JA: ボルツマン定数 (eV/K)。
+kb = 8.6173332622e-05
+
+# --- Legacy LJ Block / 历史LJ参数 / 旧LJパラメータ ---
+# ZH: 当前 Be-W ABOP 主流程通常不使用此块，仅保留兼容。
+# EN: Usually unused in current Be-W ABOP workflow; kept for compatibility.
+# JA: 現在の Be-W ABOP 主フローでは通常未使用で、互換性のため保持。
+mass_Ar = 39.948
+epsilon = 120
+sigma = 2.44

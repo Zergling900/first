@@ -1,0 +1,10 @@
+inject_seed_config=123456789
+inject_seed_actual=123456789
+seed_mode=fixed
+inject_use_fixed_seed=1
+incident_species=W
+inject_start_time_fs=0
+inject_interval_fs=10
+inject_max_particles=5000
+inject_energy_keV=10
+inject_speed_legacy=-1

@@ -34,15 +34,24 @@ struct RuntimeConfig
     int et_width = 2;
     int file_index = 0;
 
+    bool inject_only_mode = false;
+    int inject_only_steps = 0;
+    bool inject_only_control_temperature = true;
+    double inject_only_target_T = -1.0;
+    double inject_only_dT = 0.0;
+
+    int initial_hold_steps = 0;
     int T_step = 0;
     int T_step_t = 1;
+    bool enable_cooling = true;
+    double cooling_dT = 0.0;
+    double cooling_T_end = 0.0;
     int output_Data_step = 1;
     int output_Et_step = 1;
 
     int plateau_blocks = 1;
     int extra_steps_max = 10000;
-    int rotate_every_up = 10;
-    int rotate_every_down = 10;
+    int rotate_every_data_frames = 200;
     int flush_every_writes = 256;
 
     long long total_steps = 0;
@@ -58,7 +67,11 @@ long long EstimateTotalSteps(const parameter1 &pr1,
                              int heating_blocks,
                              int plateau_blocks,
                              int base_steps,
-                             int extra_steps_max);
+                             int extra_steps_max,
+                             int initial_hold_steps,
+                             bool enable_cooling,
+                             double cooling_dT,
+                             double cooling_T_end);
 
 bool LoadAndValidateInputs(SimulationContext &ctx);
 bool InitOutput(SimulationContext &ctx);

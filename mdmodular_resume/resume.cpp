@@ -141,6 +141,7 @@ bool ReadDataFrameForResume(const std::string &path,
                             double target_time_fs,
                             double dt_fs,
                             bool use_last_frame,
+                            bool require_exact_time,
                             Data &data)
 {
     std::ifstream fin(path);
@@ -179,7 +180,7 @@ bool ReadDataFrameForResume(const std::string &path,
         return false;
     }
 
-    if (!use_last_frame)
+    if (!use_last_frame && require_exact_time)
     {
         const double tol = 0.01 * std::fabs(dt_fs);
         if (std::fabs(best_t - target_time_fs) > tol)
@@ -260,7 +261,7 @@ bool ReadEt0ResumeState(const std::string &et0_path,
         return false;
     }
 
-    if (!use_last_row)
+    if (!use_last_row && p4.resume_require_exact_time)
     {
         const double tol = 0.01 * std::fabs(dt_fs);
         if (std::fabs(best_t - target_time_fs) > tol)
@@ -269,8 +270,7 @@ bool ReadEt0ResumeState(const std::string &et0_path,
                       << " chosen=" << best_t << " tol=" << tol << "\n";
             return false;
         }
-        if (p4.resume_require_exact_time)
-            st.exact_time_match = true;
+        st.exact_time_match = true;
     }
 
     st.valid = true;

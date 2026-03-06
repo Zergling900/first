@@ -95,9 +95,13 @@ long long EstimateTotalSteps(const parameter1 &pr1,
                              int heating_blocks,
                              int plateau_blocks,
                              int base_steps,
-                             int extra_steps_max)
+                             int extra_steps_max,
+                             int initial_hold_steps,
+                             bool enable_cooling,
+                             double cooling_dT,
+                             double cooling_T_end)
 {
-    long long total_steps = 0;
+    long long total_steps = std::max(0, initial_hold_steps);
     double T_sim = T_start;
 
     for (int i = 0; i < heating_blocks; ++i)
@@ -112,12 +116,14 @@ long long EstimateTotalSteps(const parameter1 &pr1,
         total_steps += HoldStepsForTemp(pr1, T_sim, base_steps, extra_steps_max);
     }
 
-    if (pr1.T_end > pr1.TT && pr1.dT > 0.0)
+    if (enable_cooling && cooling_dT > 0.0)
     {
-        while (T_sim > pr1.TT)
+        const double cool_target = std::min(T_sim, cooling_T_end);
+        constexpr double eps = 1.0e-12;
+        while (T_sim > cool_target + eps)
         {
             total_steps += HoldStepsForTemp(pr1, T_sim, base_steps, extra_steps_max);
-            T_sim = std::max(T_sim - pr1.dT, pr1.TT);
+            T_sim = std::max(T_sim - cooling_dT, cool_target);
         }
     }
 

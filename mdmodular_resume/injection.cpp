@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <cmath>
+#include <fstream>
 
 #include "3.h"
 #include "void.h"
@@ -24,6 +25,17 @@ double ClampMargin(double m, double L)
         return 0.5 * L;
     return m;
 }
+
+double SpeedFromEnergyKeV(double energy_keV, double mass_amu, double E0_eV_per_internal)
+{
+    if (energy_keV <= 0.0 || mass_amu <= 0.0 || E0_eV_per_internal <= 0.0)
+        return 0.0;
+
+    // E(eV) = E_internal * E0, and E_internal = 0.5 * m * v^2
+    const double energy_eV = energy_keV * 1000.0;
+    const double energy_internal = energy_eV / E0_eV_per_internal;
+    return std::sqrt(2.0 * energy_internal / mass_amu);
+}
 } // namespace
 
 int ProjectileSpawnCount_Current(const parameter5 &p5, const InjectionRuntime &ir, const Data &data)
@@ -42,10 +54,19 @@ int ProjectileSpawnCount_Current(const parameter5 &p5, const InjectionRuntime &i
 
 Matrix31 ProjectileVelocity_Current(const parameter5 &p5, const parameter1 &pr1, const Data &data, const Atom &a_template)
 {
-    (void)pr1;
     (void)data;
-    (void)a_template;
-    const double v = std::fabs(p5.inject_speed);
+
+    const double mass = AtomMassByType(a_template.atom_type, pr1);
+    double v = 0.0;
+    if (p5.inject_energy_keV > 0.0)
+    {
+        v = SpeedFromEnergyKeV(p5.inject_energy_keV, mass, pr1.E0);
+    }
+    else if (p5.inject_speed >= 0.0)
+    {
+        v = std::fabs(p5.inject_speed); // legacy fallback
+    }
+
     return Matrix31(0.0, 0.0, -v);
 }
 
@@ -104,10 +125,36 @@ bool MaybeInjectProjectiles(const parameter5 &p5,
 
     if (!ir.initialized)
     {
-        if (p5.inject_use_fixed_seed)
-            ir.rng.seed(p5.inject_seed);
+        const bool random_mode = (p5.inject_seed < 0) || (p5.inject_use_fixed_seed == 0);
+        unsigned int actual_seed = 0u;
+        if (random_mode)
+            actual_seed = std::random_device{}();
         else
-            ir.rng.seed(std::random_device{}());
+            actual_seed = static_cast<unsigned int>(p5.inject_seed);
+
+        ir.rng.seed(actual_seed);
+        {
+            std::ofstream fout("seed.txt", std::ios::out);
+            if (fout)
+            {
+                fout << "inject_seed_config=" << p5.inject_seed << "\n";
+                fout << "inject_seed_actual=" << actual_seed << "\n";
+                fout << "seed_mode=" << (random_mode ? "random" : "fixed") << "\n";
+                fout << "inject_use_fixed_seed=" << p5.inject_use_fixed_seed << "\n";
+                fout << "incident_species=" << p5.incident_species << "\n";
+                fout << "inject_start_time_fs=" << p5.inject_start_time_fs << "\n";
+                fout << "inject_interval_fs=" << p5.inject_interval_fs << "\n";
+                fout << "inject_max_particles=" << p5.inject_max_particles << "\n";
+                fout << "inject_energy_keV=" << p5.inject_energy_keV << "\n";
+                fout << "inject_speed_legacy=" << p5.inject_speed << "\n";
+            }
+        }
+
+        if (p5.inject_energy_keV > 0.0 && p5.inject_speed >= 0.0)
+            std::cout << "[Inject] both inject_energy_keV and legacy inject_speed are set; using inject_energy_keV.\n";
+        else if (p5.inject_energy_keV <= 0.0 && p5.inject_speed >= 0.0)
+            std::cout << "[Inject] using legacy inject_speed fallback; prefer inject_energy_keV.\n";
+
         ir.next_inject_time_fs = p5.inject_start_time_fs;
         ir.initialized = true;
     }

@@ -1,13 +1,56 @@
-# Runtime schedule / output control
+# ===== P3: Runtime Schedule / Output / Cooling =====
+# ZH: 该文件定义每个温度块步数补偿、初温平衡、降温策略与输出轮转。
+# EN: This file defines per-temperature extra steps, initial equilibration, cooling policy, and output rotation.
+# JA: このファイルは温度ブロック追加ステップ、初期平衡化、冷却方針、出力ローテーションを設定します。
+
+# ZH: 高温时可额外增加步数上限（0=关闭额外步数）。
+# EN: Max extra steps at high temperature (0 = disable extra steps).
+# JA: 高温時の追加ステップ上限（0=追加なし）。
 extra_steps_max = 0
+
+# ZH: 在 T_init 下先平衡的时间 (fs)。
+# EN: Initial equilibration hold time at T_init (fs).
+# JA: T_init で先に平衡化する保持時間 (fs)。
+initial_hold_time_fs = 0.0
+
+# ZH: 到达升温上限后额外保温块数量。
+# EN: Number of additional plateau blocks after heating reaches top temperature.
+# JA: 昇温上限到達後に追加で保持するブロック数。
 plateau_blocks = 1
 
-# Rotate output files every N temperature updates in heating/cooling.
-output_rotate_every_temp_up = 10
-output_rotate_every_temp_down = 10
+# --- Cooling Switch / 降温开关 / 冷却スイッチ ---
+# ZH: 1=执行降温, 0=跳过降温。
+# EN: 1=run cooling, 0=skip cooling.
+# JA: 1=冷却を実行, 0=冷却をスキップ。
+enable_cooling = 1
 
-# Flush output streams every N write calls.
+# ZH: 降温每步温度变化 (K)。<=0 时回退使用 parameter.p1 的 dT。
+# EN: Cooling decrement per step (K). <=0 falls back to dT in parameter.p1.
+# JA: 冷却1ステップあたりの温度減分 (K)。<=0 の場合は parameter.p1 の dT を使用。
+# cooling_dT = -1.0
+cooling_dT = 500.0
+
+# ZH: 降温终止温度 (K)。<0 时回退使用 parameter.p1 的 T_init。
+# EN: Cooling stop temperature (K). <0 falls back to T_init in parameter.p1.
+# JA: 冷却終了温度 (K)。<0 の場合は parameter.p1 の T_init を使用。
+# cooling_T_end = -1.0
+cooling_T_end = 200.0
+
+# --- Output Rotation / 输出轮转 / 出力ローテーション ---
+# ZH: 每个 BCC.xx.md3 内最多写入 N 组数据帧，达到后 Data/Et 同步切换到下一个编号。
+# EN: Max number of Data frames per BCC.xx.md3 file; once reached, Data/Et rotate to next index together.
+# JA: BCC.xx.md3 ごとの最大データフレーム数。到達すると Data/Et を同時に次番号へ切替。
+# ZH: 设为 <=0 表示关闭自动切换（整个运行写入同一组文件）。
+# EN: Set <=0 to disable auto rotation (single output index for whole run).
+# JA: <=0 にすると自動ローテーション無効（実行全体を同一番号へ出力）。
+output_rotate_every_data_frames = 200
+
+# ZH: 每累计 N 次写入操作后 flush 一次，减少 I/O 卡顿。
+# EN: Flush streams every N write calls to reduce I/O stalls.
+# JA: 書き込み N 回ごとに flush して I/O 停滞を抑制。
 output_flush_every_writes = 1024
 
-# Verlet neighbor-list skin distance (Angstrom in current units).
+# ZH: Verlet 邻居表皮肤距离（长度单位同体系长度单位）。
+# EN: Verlet neighbor-list skin distance (same length unit as the simulation box).
+# JA: Verlet 近傍リストのスキン距離（系の長さ単位と同じ）。
 verlet_skin = 0.50

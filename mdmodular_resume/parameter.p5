@@ -1,26 +1,104 @@
-# ===== Projectile Injection Control (minimal validation version) =====
-# 0 = disabled
-# 1 = enabled
-enable_injection = 0
+# ===== P5: Projectile Injection Control =====
+# ZH: 该文件控制注入粒子的种类、时间计划、空间位置与速度。
+# EN: This file controls injected species, timing schedule, spawn position, and velocity.
+# JA: このファイルは注入粒子の種類、時間スケジュール、生成位置、速度を制御します。
 
-# Must be exact: W / Be / He
-# Current validation run can use W only; other species are reserved for later extension.
+# --- Master Switch / 总开关 / 全体スイッチ ---
+# ZH: 0=关闭注入；1=开启注入。
+# EN: 0=disable injection; 1=enable injection.
+# JA: 0=注入無効; 1=注入有効。
+enable_injection = 1
+
+# ZH: 注入粒子元素，必须写 W / Be / He（当前 He 仅保留接口）。
+# EN: Injected species must be W / Be / He (He is currently interface-reserved).
+# JA: 注入元素は W / Be / He を厳密指定（He は現在インターフェースのみ）。
 incident_species = W
+
+# ZH: 注入粒子的身份标签（用于区分基底粒子与入射粒子）。
+# EN: Identity tag for injected particles (to distinguish substrate vs incident particles).
+# JA: 注入粒子の識別タグ（基板粒子との区別用）。
 incident_identity = 1
 
-# Schedule
+# --- Time Schedule / 时间计划 / 時間スケジュール ---
+# ZH: 开始注入的仿真时间 (fs)。
+# EN: Simulation time to start injection (fs).
+# JA: 注入開始のシミュレーション時刻 (fs)。
 inject_start_time_fs = 0.0
+
+# ZH: 注入事件间隔 (fs)。<=0 时只执行一次事件。
+# EN: Interval between injection events (fs). <=0 results in a single event.
+# JA: 注入イベント間隔 (fs)。<=0 の場合は1回のみ実行。
 inject_interval_fs = 10.0
-inject_max_particles = 0
+
+# ZH: 最大注入粒子总数。<=0 表示不注入。
+# EN: Maximum total number of injected particles. <=0 means no injection.
+# JA: 注入粒子の総上限数。<=0 は注入なし。
+inject_max_particles = 5000
+
+# ZH: 每次注入事件的批量数量。
+# EN: Number of particles injected per event.
+# JA: 1イベントあたりの注入粒子数。
 inject_batch_size = 1
 
-# Geometry / velocity
-# New particles are placed near the top plane z = z_max - inject_z_margin, then shot toward -z.
+# --- Spawn Geometry / 注入位置 / 生成位置 ---
+# ZH: 注入平面在盒子上边界下方 z_margin 处（z = z_max - inject_z_margin）。
+# EN: Injection plane is below top boundary by z_margin (z = z_max - inject_z_margin).
+# JA: 注入面は上境界から z_margin 下（z = z_max - inject_z_margin）。
 inject_z_margin = 0.5
-inject_x_margin = 0.0
-inject_y_margin = 0.0
-inject_speed = 0.0
 
-# RNG for random x-y spawn positions
+# ZH: x 方向边界留白，实际注入 x 在 [margin, Lx-margin] 随机。
+# EN: x-margin for spawn region; x is random in [margin, Lx-margin].
+# JA: 生成領域の x 余白。x は [margin, Lx-margin] で乱数。
+inject_x_margin = 0.0
+
+# ZH: y 方向边界留白，实际注入 y 在 [margin, Ly-margin] 随机。
+# EN: y-margin for spawn region; y is random in [margin, Ly-margin].
+# JA: 生成領域の y 余白。y は [margin, Ly-margin] で乱数。
+inject_y_margin = 0.0
+
+# ZH: 入射粒子动能 (keV/粒子)，方向固定为 -z。
+# EN: Kinetic energy of injected particle (keV per particle), direction fixed to -z.
+# JA: 注入粒子の運動エネルギー (keV/粒子)。方向は -z 固定。
+inject_energy_keV = 10.0
+
+# ZH: 兼容旧参数，直接给速度（不建议）。<0 表示关闭旧参数回退。
+# EN: Legacy direct-speed parameter (not recommended). <0 disables legacy fallback.
+# JA: 旧式の速度直接指定（非推奨）。<0 で旧パラメータのフォールバック無効。
+# inject_speed = -1.0
+
+# --- Inject-Only Runtime / 注入-only运行控制 / 注入専用実行制御 ---
+# ZH: 仅在 parameter.p4 的 resume_action=1（切片入射模式）时生效。
+# EN: Effective only when resume_action=1 (slice inject-only mode) in parameter.p4.
+# JA: parameter.p4 の resume_action=1（スライス注入専用モード）のときのみ有効です。
+
+# ZH: 注入-only持续时长 (fs)。<=0 时回退使用 parameter.p1 的 endtime。
+# EN: Inject-only duration (fs). <=0 falls back to endtime from parameter.p1.
+# JA: 注入専用モードの継続時間 (fs)。<=0 の場合は parameter.p1 の endtime を使用。
+inject_only_duration_fs = 1.0E5
+
+# ZH: 1=维持恒温器目标温度；0=关闭恒温器（xi=0，主要靠注入改变能量）。
+# EN: 1=keep thermostat target temperature; 0=disable thermostat (xi=0, energy mainly from injection).
+# JA: 1=サーモスタット目標温度を維持; 0=サーモスタット無効（xi=0、主に注入でエネルギー変化）。
+inject_only_control_temperature = 1
+
+# ZH: 注入-only初始目标温度 (K)，<0 时继承切片时刻的目标温度。
+# EN: Initial target temperature for inject-only mode (K), <0 keeps target from sliced frame.
+# JA: 注入専用モードの初期目標温度 (K)。<0 の場合はスライス時の目標温度を継承。
+inject_only_target_T = -1.0
+
+# ZH: 注入-only模式下每个 T_time 块对目标温度的增量 (K)。
+# EN: Target-temperature increment per T_time block in inject-only mode (K).
+# JA: 注入専用モードで、T_time ブロックごとの目標温度増分 (K)。
+inject_only_dT = 0.0
+
+# --- Random Seed / 随机种子 / 乱数シード ---
+# ZH: 种子策略：inject_seed>=0 使用固定种子；inject_seed<0 使用随机种子（每次不同）。
+# EN: Seed policy: inject_seed>=0 uses fixed seed; inject_seed<0 uses random seed (different each run).
+# JA: シード方針: inject_seed>=0 は固定シード、inject_seed<0 はランダムシード（毎回異なる）です。
 inject_use_fixed_seed = 1
-inject_seed = 123456789
+
+# ZH: 注入随机数种子值。<0 时自动改为随机种子。
+# EN: Random seed value for injection. If <0, it switches to random seed automatically.
+# JA: 注入乱数シード値。<0 の場合は自動でランダムシードに切り替えます。
+#inject_seed = 123456789
+#inject_seed = -1

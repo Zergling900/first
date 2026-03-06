@@ -17,6 +17,7 @@ bool ReadDataFrameForResume(const std::string &path,
                             double target_time_fs,
                             double dt_fs,
                             bool use_last_frame,
+                            bool require_exact_time,
                             Data &data);
 bool ReadEt0ResumeState(const std::string &et0_path,
                         double target_time_fs,
@@ -26,7 +27,7 @@ bool ReadEt0ResumeState(const std::string &et0_path,
                         ResumeState &st);
 std::string MakeEtGroupPath(const std::string &et_path, int group_index);
 void Dimensionalless(Data &data, parameter1 &pr1, parameter2 &pr2_WW, parameter2 &pr2_BB, parameter2 &pr2_WB);
-void IntialData(Data &data, parameter1 &p1);
+void InitialData(Data &data, parameter1 &p1);
 void LJ_potential(Data &data, const parameter1 &pr1, vector<double> &U_atom);
 //void BeW_potential(const parameter1 &pr1, const parameter2 &pr2, Data &data, vector<double> &U_atom);
 void BeW_potential(const parameter1 &pr1,

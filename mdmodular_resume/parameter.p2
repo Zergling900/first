@@ -1,4 +1,29 @@
-# ===== ABOP AWW =====
+# ===== P2: Be-W ABOP Potential Parameters =====
+# ZH: 该文件定义 W-W、Be-Be、W-Be 的 ABOP 势参数。
+# EN: This file defines ABOP potential parameters for W-W, Be-Be, and W-Be.
+# JA: このファイルは W-W、Be-Be、W-Be の ABOP ポテンシャル係数を定義します。
+
+# --- Field Dictionary / 字段说明 / 項目説明 ---
+# ZH: D0=键能深度, r0=平衡键长, beta/S=二体势形状。
+# EN: D0=bond energy depth, r0=equilibrium bond length, beta/S=two-body shape.
+# JA: D0=結合エネルギー深さ, r0=平衡結合長, beta/S=2体項の形状。
+# ZH: gamma/c/d/h=三体角度相关项。
+# EN: gamma/c/d/h=three-body angular terms.
+# JA: gamma/c/d/h=3体角度項。
+# ZH: R/D=截断中心与平滑宽度。
+# EN: R/D=cutoff center and smoothing width.
+# JA: R/D=カットオフ中心と平滑幅。
+# ZH: 2mu=指数项参数（当前代码按“2mu原值”读取到 mu）。
+# EN: 2mu=exponential parameter (currently read directly into mu as-is by code).
+# JA: 2mu=指数項パラメータ（現コードではそのまま mu に読み込み）。
+# ZH: rf/bf=附加调制参数。
+# EN: rf/bf=additional modulation parameters.
+# JA: rf/bf=追加の変調パラメータ。
+
+# ===== ABOP AWW (W-W) =====
+# ZH: 钨-钨相互作用。
+# EN: Tungsten-tungsten interaction.
+# JA: タングステン-タングステン相互作用。
 AWW.D0    = 5.41861
 AWW.r0    = 2.34095
 AWW.beta  = 1.38528
@@ -7,15 +32,18 @@ AWW.gamma = 1.88227e-3
 AWW.c     = 2.14969
 AWW.d     = 0.17126
 AWW.h     = -0.27780
-#AWW.R     = 3.10
-#AWW.D     = 0.10
-AWW.R     = 3.50 #Juslin N, Erhart P, Tr ̈askelin P, Nord J, Henriksson K O E, Nordlund K, Salonen E and Albe K 2005 Analytical interatomic potential for modelling non-equilibrium processes in the W–C–H system J. Appl. Phys.
+# AWW.R   = 3.10
+# AWW.D   = 0.10
+AWW.R     = 3.50 # Juslin et al. 2005 W-C-H potential reference
 AWW.D     = 0.30
 AWW.2mu   = 0.458764
 AWW.rf    = 1.3
 AWW.bf    = 12
 
-# ===== ABOP ABB =====
+# ===== ABOP ABB (Be-Be) =====
+# ZH: 铍-铍相互作用。
+# EN: Beryllium-beryllium interaction.
+# JA: ベリリウム-ベリリウム相互作用。
 ABB.D0    = 1.03571
 ABB.r0    = 2.07880
 ABB.beta  = 1.3
@@ -30,7 +58,10 @@ ABB.2mu   = 0.0
 ABB.rf    = 0.8
 ABB.bf    = 15
 
-# ===== ABOP AWB =====
+# ===== ABOP AWB (W-Be cross) =====
+# ZH: 钨-铍交叉相互作用。
+# EN: Tungsten-beryllium cross interaction.
+# JA: タングステン-ベリリウム交差相互作用。
 AWB.D0    = 3.79097878993
 AWB.r0    = 2.06330081049
 AWB.beta  = 0.91209070485

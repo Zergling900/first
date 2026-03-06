@@ -291,6 +291,7 @@ void read3(const FileName &filename, parameter3 &p3)
     }
 
     std::string line;
+    bool rotate_frames_seen = false;
     while (std::getline(fin, line))
     {
         std::size_t pos = line.find('#');
@@ -319,10 +320,21 @@ void read3(const FileName &filename, parameter3 &p3)
             p3.extra_steps_max = std::stoi(value_str);
         else if (key == "plateau_blocks")
             p3.plateau_blocks = std::stoi(value_str);
-        else if (key == "output_rotate_every_temp_up")
-            p3.output_rotate_every_temp_up = std::stoi(value_str);
-        else if (key == "output_rotate_every_temp_down")
-            p3.output_rotate_every_temp_down = std::stoi(value_str);
+        else if (key == "initial_hold_time_fs")
+            p3.initial_hold_time_fs = std::stod(value_str);
+        else if (key == "enable_cooling")
+            p3.enable_cooling = std::stoi(value_str);
+        else if (key == "cooling_dT")
+            p3.cooling_dT = std::stod(value_str);
+        else if (key == "cooling_T_end")
+            p3.cooling_T_end = std::stod(value_str);
+        else if (key == "output_rotate_every_data_frames")
+        {
+            p3.output_rotate_every_data_frames = std::stoi(value_str);
+            rotate_frames_seen = true;
+        }
+        else if (!rotate_frames_seen && (key == "output_rotate_every_temp_up" || key == "output_rotate_every_temp_down"))
+            p3.output_rotate_every_data_frames = std::stoi(value_str); // backward-compatible fallback
         else if (key == "output_flush_every_writes")
             p3.output_flush_every_writes = std::stoi(value_str);
         else if (key == "verlet_skin")
@@ -375,6 +387,16 @@ void read4(const FileName &filename, parameter4 &p4)
             p4.resume_require_exact_time = std::stoi(value_str);
         else if (key == "continue_write_next_index")
             p4.continue_write_next_index = std::stoi(value_str);
+        else if (key == "resume_action")
+            p4.resume_action = std::stoi(value_str);
+        else if (key == "prompt_slice_time")
+            p4.prompt_slice_time = std::stoi(value_str);
+        else if (key == "slice_time_fs")
+            p4.slice_time_fs = std::stod(value_str);
+        else if (key == "slice_use_nearest_time")
+            p4.slice_use_nearest_time = std::stoi(value_str);
+        else if (key == "slice_output_prefix")
+            p4.slice_output_prefix = value_str;
         else if (key == "force_model")
             p4.force_model = value_str;
     }
@@ -435,12 +457,22 @@ void read5(const FileName &filename, parameter5 &p5)
             p5.inject_x_margin = std::stod(value);
         else if (key == "inject_y_margin")
             p5.inject_y_margin = std::stod(value);
+        else if (key == "inject_energy_keV")
+            p5.inject_energy_keV = std::stod(value);
         else if (key == "inject_speed")
-            p5.inject_speed = std::stod(value);
+            p5.inject_speed = std::stod(value); // legacy fallback
+        else if (key == "inject_only_duration_fs")
+            p5.inject_only_duration_fs = std::stod(value);
+        else if (key == "inject_only_control_temperature")
+            p5.inject_only_control_temperature = std::stoi(value);
+        else if (key == "inject_only_target_T")
+            p5.inject_only_target_T = std::stod(value);
+        else if (key == "inject_only_dT")
+            p5.inject_only_dT = std::stod(value);
         else if (key == "inject_use_fixed_seed")
             p5.inject_use_fixed_seed = std::stoi(value);
         else if (key == "inject_seed")
-            p5.inject_seed = static_cast<unsigned int>(std::stoul(value));
+            p5.inject_seed = std::stoll(value);
     }
 }
 
